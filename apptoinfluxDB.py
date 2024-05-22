@@ -4,7 +4,7 @@ import time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from math import exp
-from alerts_copy import check_conditions
+from alerts import check_conditions
 
 #read json file
 def read_config(file_path):
