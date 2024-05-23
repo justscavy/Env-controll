@@ -6,3 +6,6 @@
     save password for json file.
 
 3. configure json file
+
+
+4. InfluxDB http://localhost:8086/ or specify ur local ip to be more flexible
