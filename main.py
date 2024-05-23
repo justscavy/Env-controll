@@ -3,7 +3,7 @@ import smbus2
 import bme280
 import math
 from datetime import datetime, timedelta
-from classesone import SensorData  # Import the SensorData dataclass
+from classes import SensorData  # Import the SensorData dataclass
 from alerts import send_email  # Import the send_email function
 
 '''
@@ -58,14 +58,6 @@ def read_sensor_data():
         # Calculate VPD using leaf temperature
         vpd = vpd_converter(leaf_temperature_celsius, humidity)
 
-
-        # Print the results
-        print(f"Pressure: {pressure} hPa")
-        print(f"Temperature: {temperature_celsius:.2f} °C")
-        print(f"Leaf Temperature: {leaf_temperature_celsius:.2f} °C")
-        print(f"Humidity: {humidity:.2f} %")
-        print(f"VPD: {vpd:.2f} kPa")
-
         return SensorData(
             pressure=pressure,
             temperature_celsius=temperature_celsius,
@@ -77,7 +69,7 @@ def read_sensor_data():
         print('An unexpected error occurred:', str(e))
         return None
 
-# Main loop
+
 while True:
     try:
         sensor_data = read_sensor_data()

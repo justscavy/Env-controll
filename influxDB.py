@@ -1,4 +1,3 @@
-import random
 import json
 import time
 from influxdb_client import InfluxDBClient, Point
@@ -6,6 +5,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from alerts import check_conditions
 from sensor import generate_sensor_data
 from classes import SensorData
+from datetime import datetime
 
 #Read JSON file
 def read_config(file_path):
@@ -38,8 +38,10 @@ def write_to_influxdb() -> None:
     write_api.write(bucket=bucket, record=point)
     check_conditions(temperature=sensor_data.temperature, humidity=sensor_data.humidity, vpd=sensor_data.vpd, to_email=to_email)
 
+
 if __name__ == "__main__":
     while True:
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         write_to_influxdb()
-        print("Sensor data written to InfluxDB")
+        print(f"Sensor data written to InfluxDB", current_time)   
         time.sleep(1)  # Generate data every 1 second
