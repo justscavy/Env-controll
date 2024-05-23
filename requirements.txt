@@ -1,0 +1,5 @@
+rpi.bme280==0.2.4
+smbus2==0.4.3
+flask
+influxdb
+influxdb-client
