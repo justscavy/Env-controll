@@ -3,16 +3,16 @@ import json
 import time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-from math import exp
 from alerts import check_conditions
 from sensor import generate_sensor_data
+from classes import SensorData
 
-#read json file
+#Read JSON file
 def read_config(file_path):
     with open(file_path) as f:
         return json.load(f)
 
-#influx auth connection
+#InfluxDB auth connection
 config = read_config("config.json")
 influxdb_config = config.get("influxdb", {})
 email_config = config.get("email", {})
@@ -22,22 +22,21 @@ org = influxdb_config.get("org")
 bucket = influxdb_config.get("bucket")
 to_email = email_config.get("to_email")
 
-#init influxclient
+#Init InfluxDBClient
 client = InfluxDBClient(url=url, token=token, org=org)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-
-#write data to influx
+#write Data to InfluxDB
 def write_to_influxdb() -> None:
-    temperature, pressure, humidity, vpd = generate_sensor_data()
+    sensor_data: SensorData = generate_sensor_data()
     point = Point("sensor_data").tag("location", "indoor") \
-                                 .field("temperature", temperature) \
-                                 .field("pressure", pressure) \
-                                 .field("humidity", humidity) \
-                                 .field("vpd", vpd)
+                                 .field("temperature", sensor_data.temperature) \
+                                 .field("pressure", sensor_data.pressure) \
+                                 .field("humidity", sensor_data.humidity) \
+                                 .field("vpd", sensor_data.vpd)
 
     write_api.write(bucket=bucket, record=point)
-    check_conditions(temperature=temperature, humidity=humidity, vpd=vpd, to_email=to_email)
+    check_conditions(temperature=sensor_data.temperature, humidity=sensor_data.humidity, vpd=sensor_data.vpd, to_email=to_email)
 
 if __name__ == "__main__":
     while True:
