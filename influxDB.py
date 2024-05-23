@@ -1,16 +1,11 @@
-import json
 import time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-from alerts import check_conditions
+from alerts import check_conditions, read_config
 from sensor import generate_sensor_data
 from classes import SensorData
 from datetime import datetime
 
-#Read JSON file
-def read_config(file_path):
-    with open(file_path) as f:
-        return json.load(f)
 
 #InfluxDB auth connection
 config = read_config("config.json")
