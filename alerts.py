@@ -7,7 +7,6 @@ from influxdb_manager import read_config
 
 
 
-
 config = read_config("config.json")
 influxdb_config = config.get("influxdb", {})
 email_config = config.get("email", {})
@@ -15,8 +14,6 @@ email_config = config.get("email", {})
 to_email = email_config.get("to_email")
 from_email = email_config.get("from_email")
 email_password = email_config.get("email_password")
-
-
 
 
 def send_email(subject, body, to_email) -> None:
@@ -35,13 +32,11 @@ def send_email(subject, body, to_email) -> None:
         print(f"Failed to send email: {e}")
 
 
-
 # Variables to track out-of-range time and last email sent time
 out_of_range_start_time_temp = None
 out_of_range_start_time_humidity = None
 last_email_sent_time = None
 email_cooldown = timedelta(minutes=5) #set time between sending alerts 
-
 
 
 def check_conditions(temperature, humidity, vpd, to_email):
@@ -110,9 +105,8 @@ def test_influxdb_connection():
     # Get the current time
     current_time = time.time()
 
-    # Check if 30 minutes have passed since the last email was sent
+    #30mins passed send next email
     if current_time - connection_alert_time >= 30 * 60:
-        # Send the email
         config = read_config("config.json")
         email_config = config.get("email", {})
         to_email = email_config.get("to_email")
