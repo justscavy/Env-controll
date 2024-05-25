@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -12,14 +11,14 @@ config_manager = ConfigManager("config/config.json")
 
 def send_email(subject, body, to_email):
     msg = MIMEMultipart()
-    msg['From'] = config_manager.email_from
+    msg['From'] = config_manager.email_config.from_email
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(config_manager.email_from, config_manager.email_password)
+            server.login(config_manager.email_config.from_email, config_manager.email_config.email_password)
             server.send_message(msg)
             print("Email sent successfully")
     except Exception as e:
@@ -53,15 +52,15 @@ def check_conditions(temperature, humidity, vpd, to_email):
                 out_of_range_start_time_temp = None
                 last_email_sent_time = current_time
     else:
-        #reset the timer if temperature goes back in range
+        #reset timer if temperature goes back in range
         out_of_range_start_time_temp = None
 
-    #Check humidity
+    #check humidity
     if humidity < 30 or humidity > 90:
         if out_of_range_start_time_humidity is None:
             #Start the timer when humidity goes out of range
             out_of_range_start_time_humidity = current_time
-        elif current_time - out_of_range_start_time_humidity > timedelta(minutes=1):
+        elif current_time - out_of_range_start_time_humidity > timedelta(minutes=1): #timedelta to stop alerts from short spikes
             #Check if enough time has passed since the last email
             if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
                 # Humidity has been out of range for more than 1 minute

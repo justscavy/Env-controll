@@ -1,5 +1,6 @@
 import random
 from math import exp
+
 from classes import SensorData
 
 
