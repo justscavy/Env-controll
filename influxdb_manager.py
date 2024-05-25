@@ -4,7 +4,7 @@ import time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-from classes import SensorData
+from sensor import SensorData
 from config_manager import ConfigManager
 from sensor import generate_sensor_data
 from alerts import check_conditions, send_email

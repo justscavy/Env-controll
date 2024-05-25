@@ -1,11 +1,19 @@
 import random
 from math import exp
+from dataclasses import dataclass
 
-from classes import SensorData
+
+@dataclass
+class SensorData:
+    temperature: float
+    pressure: float
+    humidity: float
+    vpd: float
 
 
 #simulate sensor data
 def generate_sensor_data() -> tuple:
+    #random test values
     temperature = random.uniform(0.0, 40.0)
     pressure = random.uniform(100.0, 1000.0)
     humidity = random.uniform(0.0, 20.0)
