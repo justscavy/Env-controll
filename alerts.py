@@ -4,28 +4,22 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from config_manager import read_config
+from config_manager import ConfigManager
 
 
 
-config = read_config("config.json")
-influxdb_config = config.get("influxdb", {})
-email_config = config.get("email", {})
-to_email = email_config.get("to_email")
-from_email = email_config.get("from_email")
-email_password = email_config.get("email_password")
+config_manager = ConfigManager("config/config.json")
 
-
-def send_email(subject, body, to_email) -> None:
+def send_email(subject, body, to_email):
     msg = MIMEMultipart()
-    msg['From'] = from_email
+    msg['From'] = config_manager.email_from
     msg['To'] = to_email
     msg['Subject'] = subject
     msg.attach(MIMEText(body, 'plain'))
 
     try:
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(from_email, email_password)  #replace with your Gmail address AND app password (not ur gmail acc password)
+            server.login(config_manager.email_from, config_manager.email_password)
             server.send_message(msg)
             print("Email sent successfully")
     except Exception as e:
