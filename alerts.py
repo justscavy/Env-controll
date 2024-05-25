@@ -1,16 +1,16 @@
+from datetime import datetime, timedelta
+
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime, timedelta
-import time
-from influxdb_manager import read_config
+
+from config_manager import read_config
 
 
 
 config = read_config("config.json")
 influxdb_config = config.get("influxdb", {})
 email_config = config.get("email", {})
-
 to_email = email_config.get("to_email")
 from_email = email_config.get("from_email")
 email_password = email_config.get("email_password")
@@ -83,36 +83,3 @@ def check_conditions(temperature, humidity, vpd, to_email):
         out_of_range_start_time_humidity = None
 
 
-"""
-def test_influxdb_connection():
-    
-    config = read_config("config.json")
-    email_config = config.get("email", {})
-    to_email = email_config.get("to_email")
-    subject = "Connection Alert"
-    body = f"The connection has been lost"
-    to_email = to_email
-    send_email(subject, body, to_email)
-    """
-
-
-
-connection_alert_time = 0
-
-def test_influxdb_connection():
-    global connection_alert_time
-
-    # Get the current time
-    current_time = time.time()
-
-    #30mins passed send next email
-    if current_time - connection_alert_time >= 30 * 60:
-        config = read_config("config.json")
-        email_config = config.get("email", {})
-        to_email = email_config.get("to_email")
-        subject = "Connection Alert"
-        body = f"The connection has been lost"
-        send_email(subject, body, to_email)
-
-        # Update the last email time
-        connection_alert_time = current_time
