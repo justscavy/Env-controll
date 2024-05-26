@@ -31,7 +31,8 @@ out_of_range_start_time_humidity = None
 last_email_sent_time = None
 email_cooldown = timedelta(minutes=5) #set time between sending alerts 
 
-
+#The idea is to first let the programm try to handle the Enviroment before taking actions.
+#After <5mins> give out notifications
 def check_conditions(temperature, humidity, vpd, to_email):
     global out_of_range_start_time_temp, out_of_range_start_time_humidity, last_email_sent_time
     current_time = datetime.now()
@@ -40,7 +41,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
         if out_of_range_start_time_temp is None:
             #Start the timer when temperature goes out of range
             out_of_range_start_time_temp = current_time
-        elif current_time - out_of_range_start_time_temp > timedelta(minutes=1):
+        elif current_time - out_of_range_start_time_temp > timedelta(minutes=1): #set to 5
             #Check if enough time has passed since the last email
             if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
                 #Temp has been out of range for more than 1 minute
@@ -60,7 +61,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
         if out_of_range_start_time_humidity is None:
             #Start the timer when humidity goes out of range
             out_of_range_start_time_humidity = current_time
-        elif current_time - out_of_range_start_time_humidity > timedelta(minutes=1): #timedelta to stop alerts from short spikes
+        elif current_time - out_of_range_start_time_humidity > timedelta(minutes=1): #set to 5
             #Check if enough time has passed since the last email
             if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
                 # Humidity has been out of range for more than 1 minute
