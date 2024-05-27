@@ -1,0 +1,17 @@
+{
+        "influxdb": {
+            "url": "ur local IP",
+            "token": "influxdb token",
+            "org": "influx org",
+            "bucket": "influx project"
+        },
+        "email": {
+            "to_email": "email receiver",
+            "from_email": "ur created gmail acc",
+            "email_password": "the password from creating gmail app"
+        }
+}
+
+
+
+
