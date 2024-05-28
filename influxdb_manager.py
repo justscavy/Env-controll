@@ -7,7 +7,8 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from sensor import SensorData
 from config_manager import ConfigManager
 from sensor import generate_sensor_data
-from alerts import check_conditions, send_email
+from email_notification import check_conditions, send_email
+#from controller import light_control, light_state
 
 
 
@@ -20,7 +21,8 @@ client = InfluxDBClient(url=config_manager.influxdb_config.url,
                         org=config_manager.influxdb_config.org)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-# write from sensor -> influxDB
+# write from sensor -> influxDB once a sec.
+testlight_state= 1
 def write_to_influxdb() -> None:
     #just to see if programm still inserting data in console
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -29,7 +31,8 @@ def write_to_influxdb() -> None:
                                  .field("temperature", sensor_data.temperature) \
                                  .field("pressure", sensor_data.pressure) \
                                  .field("humidity", sensor_data.humidity) \
-                                 .field("vpd", sensor_data.vpd)
+                                 .field("vpd", sensor_data.vpd) \
+                                 .field("light_state", testlight_state)
 
     try:
         write_api.write(bucket=config_manager.influxdb_config.bucket, record=point)
@@ -37,7 +40,7 @@ def write_to_influxdb() -> None:
     except Exception as e:
         print(f"Failed to write data to InfluxDB: {e}")
         test_influxdb_connection()
-    #condition be set in alerts
+    
     check_conditions(temperature=sensor_data.temperature, 
                      humidity=sensor_data.humidity, 
                      vpd=sensor_data.vpd, 

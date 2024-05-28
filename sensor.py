@@ -15,9 +15,9 @@ class SensorData:
 #simulate sensor data
 def generate_sensor_data() -> tuple:
     #random test values
-    temperature = random.uniform(0.0, 40.0)
+    temperature = random.uniform(25.0, 29.0)
     pressure = random.uniform(100.0, 1000.0)
-    humidity = random.uniform(0.0, 20.0)
+    humidity = random.uniform(40.0, 50.0)
     
     # Calculate saturation vapor pressure (in kPa)
     saturation_vapor_pressure = 0.611 * exp((17.27 * temperature) / (temperature + 237.3))
