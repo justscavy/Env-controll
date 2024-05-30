@@ -29,12 +29,7 @@ def read_sensor_data():
     actual_vapor_pressure = (data.humidity / 100) * saturation_vapor_pressure
     vpd = saturation_vapor_pressure - actual_vapor_pressure
     
-    # Print sensor data
-    print(f"Temperature: {data.temperature:.2f} °C")
-    print(f"Pressure: {data.pressure:.2f} hPa")
-    print(f"Humidity: {data.humidity:.2f} %")
-    print(f"VPD: {vpd:.2f} kPa")
-    
+
     return SensorData(temperature=data.temperature, pressure=data.pressure, humidity=data.humidity, vpd=vpd)
 
 # Main function to read and print sensor data

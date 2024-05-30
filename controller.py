@@ -1,104 +1,93 @@
 import RPi.GPIO as GPIO
 import threading
+import schedule
 import time as dt
 from datetime import datetime, timedelta
 from sensor import generate_sensor_data
 import atexit
+from shared_state import shared_state
+
+# GPIO 23 - Main Light 230V
+# GPIO 24 - Humidifier
+# GPIO 25 - Dehumidifier
 
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(24, GPIO.OUT)  # Humidifier 5V
-GPIO.setup(25, GPIO.OUT)  # Dehumidifier outlet2 230V
-GPIO.setup(15, GPIO.OUT)  # Fan Fresh air 12V
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
-GPIO.setup(16, GPIO.OUT)  # Main Fan outlet3 230V
+GPIO.setup(24, GPIO.OUT)  # Humidifier
+GPIO.setup(25, GPIO.OUT)  # Dehumidifier
 
-# Create lock for GPIO operations
 gpio_lock = threading.Lock()
 
-# Define GPIO cleanup function
 def cleanup_gpio():
     GPIO.output(23, GPIO.LOW)
+    GPIO.output(24, GPIO.LOW)
+    GPIO.output(25, GPIO.LOW)
     GPIO.cleanup()
 
-# Register GPIO cleanup function to be called on program exit
+# Cleanup GPIO on program exit
 atexit.register(cleanup_gpio)
 
-# Device control functions
-def control_device(pin, duration=0):
+def turn_on_light():
     with gpio_lock:
-        GPIO.output(pin, GPIO.HIGH)
-    if duration > 0:
-        dt.sleep(duration)
-        with gpio_lock:
-            GPIO.output(pin, GPIO.LOW)
+        GPIO.output(23, GPIO.HIGH)
+    shared_state.light_state = 1
+    print(f"Light turned on at {datetime.now()} with state {shared_state.light_state}")
 
-# Control functions
-def humidifier_control():
-    control_device(24)
-
-def dehumidifier_control():  # Corrected function name
-    control_device(25)  # Corrected pin number
-
-# Main control function
-def condition_control():
-    exceed_time_low = None
-    exceed_time_high = None 
-
-    while True:
-        sensor_data = generate_sensor_data()  # Get latest sensor data
-        
-        humidity = sensor_data.humidity
-
-        if humidity <= 70:
-            if exceed_time_low is None:
-                exceed_time_low = datetime.now()
-            elif datetime.now() - exceed_time_low >= timedelta(seconds=10):
-                threading.Thread(target=humidifier_control).start()
-                exceed_time_low = None
-
-        else:
-            exceed_time_low = None
-
-        if humidity > 90:
-            if exceed_time_high is None:
-                exceed_time_high = datetime.now() + timedelta(seconds=10)  # Corrected syntax
-                threading.Thread(target=dehumidifier_control).start()  # Corrected function name
-                exceed_time_high = None
-
-        else:
-            exceed_time_high = None
-
-        dt.sleep(5)  # Check conditions every 5 seconds
+def turn_off_light():
+    with gpio_lock:
+        GPIO.output(23, GPIO.LOW)
+    shared_state.light_state = 0
+    print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
 
 def light_control():
-    on_time = datetime.strptime('09:00:00', '%H:%M:%S').time()
-    off_time = datetime.strptime('03:00:00', '%H:%M:%S').time()
-    light_state = False
+    # Get the current time
+    now = datetime.now().time()
+
+    # Define the scheduled times
+    turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
+
+    # Determine the initial state of the light based on the current time
+    if now < turn_on_time and now > turn_off_time:
+        turn_off_light()
+    else:
+        turn_on_light()
+
+    # Schedule the tasks to turn the light on and off
+    schedule.every().day.at("20:00:00").do(turn_on_light)
+    schedule.every().day.at("14:00:00").do(turn_off_light)
 
     while True:
-        now = datetime.now().time()
-
-        if on_time <= now < off_time:
-            if not light_state:
-                print("Turning on the light...")
-                with gpio_lock:
-                    GPIO.output(23, GPIO.HIGH)
-                    light_state = True
-        else:
-            if light_state:
-                print("Turning off the light...")
-                with gpio_lock:
-                    GPIO.output(23, GPIO.LOW)
-                    light_state = False
-
-        dt.sleep(10)  # Check every 10 seconds
+        schedule.run_pending()
+        dt.sleep(1)
 
 
 
+def condition_control():
+    humidifier_on = False
 
+    while True:
+        sensor_data = generate_sensor_data(shared_state.light_state)
+        humidity = sensor_data.humidity
 
+        if humidity < 65 and not humidifier_on:
+            print("Turning on humidifier...")
+            threading.Thread(target=humidifier_control, args=(True,)).start()
+            humidifier_on = True
+        elif humidity >= 80 and humidifier_on:
+            print("Turning off humidifier...")
+            threading.Thread(target=humidifier_control, args=(False,)).start()
+            humidifier_on = False
 
+        dt.sleep(1)
 
+def humidifier_control(turn_on):
+    with gpio_lock:
+        GPIO.output(24, GPIO.HIGH if turn_on else GPIO.LOW)
+    if turn_on:
+        print("Humidifier is on.")
+    else:
+        print("Humidifier is off.")
 
