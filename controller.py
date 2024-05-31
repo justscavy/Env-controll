@@ -100,3 +100,25 @@ def condition_control():
                 humidifier_on = False
 
         dt.sleep(1)
+
+
+
+
+
+
+GPIO.output(18, GPIO.HIGH)  # Turn on the LED to indicate the program is running
+
+# Run both condition_control and light_control in separate threads
+try:
+    light_thread = threading.Thread(target=light_control)
+    condition_thread = threading.Thread(target=condition_control)
+    
+    light_thread.start()
+    condition_thread.start()
+
+    light_thread.join()
+    condition_thread.join()
+except KeyboardInterrupt:
+    GPIO.output(18, GPIO.LOW)  # Turn off the LED when the program is stopped
+    cleanup_gpio()
+    print("Program terminated.")
