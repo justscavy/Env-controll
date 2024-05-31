@@ -27,9 +27,17 @@ def generate_sensor_data(light_state):
     # Read sensor data
     data = bme280.sample(bus, address, calibration_params)
     
+    # Adjust the temperature and humidity
+    adjusted_temperature = data.temperature + 0.5
+    adjusted_humidity = data.humidity + 6
+    
+    # Ensure humidity stays within the valid range (0-100%)
+    if adjusted_humidity > 100:
+        adjusted_humidity = 100
+
     # Calculate saturation vapor pressure (in kPa)
-    saturation_vapor_pressure = 0.611 * exp((17.27 * data.temperature) / (data.temperature + 237.3))
-    actual_vapor_pressure = (data.humidity / 100) * saturation_vapor_pressure
+    saturation_vapor_pressure = 0.611 * exp((17.27 * adjusted_temperature) / (adjusted_temperature + 237.3))
+    actual_vapor_pressure = (adjusted_humidity / 100) * saturation_vapor_pressure
     vpd = saturation_vapor_pressure - actual_vapor_pressure
     
-    return SensorData(temperature=data.temperature, pressure=data.pressure, humidity=data.humidity, vpd=vpd, light_state=light_state)
+    return SensorData(temperature=adjusted_temperature, pressure=data.pressure, humidity=adjusted_humidity, vpd=vpd, light_state=light_state)

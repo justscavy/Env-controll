@@ -16,6 +16,8 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier
 GPIO.setup(25, GPIO.OUT)  # Dehumidifier
+#GPIO.setup(18, GPIO.OUT) 
+
 
 gpio_lock = threading.Lock()
 
@@ -23,11 +25,13 @@ def cleanup_gpio():
     GPIO.output(23, GPIO.LOW)
     GPIO.output(24, GPIO.LOW)
     GPIO.output(25, GPIO.LOW)
+    #GPIO.output(18, GPIO.LOW)
     GPIO.cleanup()
 
 # turn of relais on exit
 atexit.register(cleanup_gpio)
 
+#GPIO.output(18, GPIO.HIGH)
 
 def humidifier_control(turn_on):
     with gpio_lock:
@@ -104,21 +108,3 @@ def condition_control():
 
 
 
-
-
-GPIO.output(18, GPIO.HIGH)  # Turn on the LED to indicate the program is running
-
-# Run both condition_control and light_control in separate threads
-try:
-    light_thread = threading.Thread(target=light_control)
-    condition_thread = threading.Thread(target=condition_control)
-    
-    light_thread.start()
-    condition_thread.start()
-
-    light_thread.join()
-    condition_thread.join()
-except KeyboardInterrupt:
-    GPIO.output(18, GPIO.LOW)  # Turn off the LED when the program is stopped
-    cleanup_gpio()
-    print("Program terminated.")
