@@ -15,5 +15,5 @@ class SharedState:
         with self._lock:
             self._light_state = value
 
-# Create a single instance of SharedState to be imported wherever needed
+
 shared_state = SharedState()

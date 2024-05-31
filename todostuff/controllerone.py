@@ -43,20 +43,16 @@ def turn_off_light():
 
 
 def light_control():
-    # Get the current time
     now = datetime.now().time()
 
-    # Define the scheduled times
     turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
     turn_off_time = datetime.strptime("08:00:00", "%H:%M:%S").time()
 
-    # Determine the initial state of the light based on the current time
     if now < turn_on_time and now > turn_off_time:
         turn_off_light()
     else:
         turn_on_light()
 
-    # Schedule the tasks to turn the light on and off
     schedule.every().day.at("18:00:00").do(turn_on_light)
     schedule.every().day.at("06:00:00").do(turn_off_light)
 
