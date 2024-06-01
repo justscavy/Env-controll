@@ -36,7 +36,7 @@ def write_to_influxdb() -> None:
 
     try:
         write_api.write(bucket=config_manager.influxdb_config.bucket, record=point)
-        print(f"Sensor data written to InfluxDB at {current_time} with light state {shared_state.light_state}")
+        #print(f"Sensor data written to InfluxDB at {current_time} with light state {shared_state.light_state}")
         shared_state.last_successful_write = time.time()  # Update the last successful write time
     except Exception as e:
         print(f"Failed to write data to InfluxDB: {e}")
