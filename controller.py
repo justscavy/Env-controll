@@ -1,99 +1,124 @@
 import RPi.GPIO as GPIO
 import threading
+import schedule
 import time as dt
-from datetime import datetime, timedelta
-from sensor import SensorData
-'''
+from datetime import datetime
+from sensor import generate_sensor_data
+import atexit
+from shared_state import shared_state
+
+# GPIO 23 - Main Light 230V
+# GPIO 24 - Humidifier
+# GPIO 25 - Dehumidifier
+
 # Initialize GPIO
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(17, GPIO.OUT)  # Humidifier 5V
-GPIO.setup(18, GPIO.OUT)  # Dehumidifier outlet2 230V
-GPIO.setup(15, GPIO.OUT)  # Fan Fresh air 12V
-GPIO.setup(13, GPIO.OUT)  # Light outlet1 230V
-GPIO.setup(16, GPIO.OUT)  # Main Fan outlet3 230V
+GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
+GPIO.setup(24, GPIO.OUT)  # Humidifier
+GPIO.setup(25, GPIO.OUT)  # Dehumidifier
+
+gpio_lock = threading.Lock()
+
+def cleanup_gpio():
+    GPIO.output(23, GPIO.LOW)
+    GPIO.output(24, GPIO.LOW)
+    GPIO.output(25, GPIO.LOW)
+    GPIO.cleanup()
+
+# turn of relais on exit
+atexit.register(cleanup_gpio)
 
 
+def humidifier_control(turn_on):
+    with gpio_lock:
+        GPIO.output(24, GPIO.HIGH if turn_on else GPIO.LOW)
+    if turn_on:
+        print("Humidifier is on.")
+    else:
+        print("Humidifier is off.")
 
-sensor_data = SensorData(temperature=SensorData.temperature, humidity=SensorData.humidity, vpd=SensorData.vpd)
+def turn_on_light():
+    with gpio_lock:
+        GPIO.output(23, GPIO.HIGH)
+    shared_state.light_state = 1
+    print(f"Light turned on at {datetime.now()} with state {shared_state.light_state}")
 
-#Device control functions
-def control_device(pin, duration=0):
-    GPIO.output(pin, GPIO.HIGH)
-    if duration > 0:
-        dt.sleep(duration)
-        GPIO.output(pin, GPIO.LOW)
-
-def humidifier_control():
-    control_device(17)
-
-def dehumidifier_control():
-    control_device(18)
-
-def input_fan_control():
-    control_device(15)
-
-def light_controll():
-    control_device(13)
-
-def main_fan():
-    control_device (16)
+def turn_off_light():
+    with gpio_lock:
+        GPIO.output(23, GPIO.LOW)
+    shared_state.light_state = 0
+    print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
 
+def light_control():
+    # Get the current time
+    now = datetime.now().time()
+
+    turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
+
+    # Determine the initial state of the light based on the current time
+    if now < turn_on_time and now > turn_off_time:
+        turn_off_light()
+    else:
+        turn_on_light()
+
+    schedule.every().day.at("20:00:00").do(turn_on_light)
+    schedule.every().day.at("14:00:00").do(turn_off_light)
+
+    while True:
+        schedule.run_pending()
+        dt.sleep(1)
+        
+
+
+#avoid devices turning on/off 
+def debounce_check(condition_func, duration=30, check_interval=1):
+    start_time = datetime.now()
+    while (datetime.now() - start_time).total_seconds() < duration:
+        if not condition_func():
+            return False
+        dt.sleep(check_interval)
+    return True
 
 def condition_control():
-    exceed_time_low = None
-    exceed_time_high = None 
+    humidifier_on = False
 
     while True:
-        sensor_data = generate_sensor_data()  # Assume this function gets the latest sensor data
-        temperature = sensor_data.temperature
+        sensor_data = generate_sensor_data(shared_state.light_state)
         humidity = sensor_data.humidity
-        vpd = sensor_data.vpd
 
-        if humidity <= 70:
-            if exceed_time_low is None:
-                exceed_time_low = datetime.now()
-            elif datetime.now() - exceed_time_low >= timedelta(minutes=1): #after condition is 1min true start  
-                threading.Thread(target=humidifier_control).start()
-                exceed_time_low = None  # Reset the timer after starting the humidifier
-        else:
-            exceed_time_low = None  # Reset the timer if humidity is not < 70%
+        if humidity < 70 and not humidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity < 65):
+                print("Turning on humidifier...")
+                threading.Thread(target=humidifier_control, args=(True,)).start()
+                humidifier_on = True
+        elif humidity >= 75 and humidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity >= 80):
+                print("Turning off humidifier...")
+                threading.Thread(target=humidifier_control, args=(False,)).start()
+                humidifier_on = False
 
-        if humidity > 90:
-            if exceed_time_high is None:
-                exceed_time_high = datetime.now()
-            elif datetime.now() - exceed_time_high >= timedelta(minutes=1): #after condition is 1min true start  
-                threading.Thread(target=main_fan_control).start()
-                exceed_time_high = None  # Reset the timer after starting the main_fan
-        else:
-            exceed_time_high = None  # Reset the timer if humidity is not > 90%
-
-        dt.sleep(5)  # Check conditions every 5 seconds
+        dt.sleep(1)
 
 
 
 
-#light_state=0
-def light_control():
-    #global light_state #track light state for influxdb
-    #start/end time for light
-    on_hour, on_minute = 6, 0  # 6:00 AM
-    off_hour, off_minute = 0, 0  # 12:00 AM (midnight)
-    on_time = dt(on_hour, on_minute)
-    off_time = dt(off_hour, off_minute)
+
+
+GPIO.output(18, GPIO.HIGH)  # Turn on the LED to indicate the program is running
+
+# Run both condition_control and light_control in separate threads
+try:
+    light_thread = threading.Thread(target=light_control)
+    condition_thread = threading.Thread(target=condition_control)
     
-    while True:
-        now = datetime.now().time()
+    light_thread.start()
+    condition_thread.start()
 
-        if on_time <= now < off_time:
-            GPIO.output(13, GPIO.HIGH)  # Turn on the light
-            light_state = 1
-        else:
-            GPIO.output(13, GPIO.LOW)   # Turn off the light
-            light_state = 0
-
-        dt.sleep(60)  # Check every minute
-        '''
-    
-
-
+    light_thread.join()
+    condition_thread.join()
+except KeyboardInterrupt:
+    GPIO.output(18, GPIO.LOW)  # Turn off the LED when the program is stopped
+    cleanup_gpio()
+    print("Program terminated.")
