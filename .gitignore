@@ -2,10 +2,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
-influxdata-archive_compat.key
+
 # C extensions
 *.so
-
+influxdata-archive_compat.key
 # Distribution / packaging
 .Python
 build/
