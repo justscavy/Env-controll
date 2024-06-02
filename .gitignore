@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-influxdata-archive_compat.key
+
 # Distribution / packaging
 .Python
 build/
@@ -160,3 +160,7 @@ cython_debug/
 
 
 *.db
+
+*.key
+
+influxdata-archive_compat.key
