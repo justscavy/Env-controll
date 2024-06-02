@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+influxdata-archive_compat.key
 # C extensions
 *.so
 
