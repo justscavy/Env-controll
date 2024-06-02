@@ -41,6 +41,7 @@ def humidifier_control(turn_on):
     else:
         print("Humidifier is off.")
 
+
 def turn_on_light():
     with gpio_lock:
         GPIO.output(23, GPIO.HIGH)
