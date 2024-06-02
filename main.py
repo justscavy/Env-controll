@@ -13,3 +13,4 @@ if __name__ == "__main__":
     while True:
         write_to_influxdb()
         time.sleep(1)
+
