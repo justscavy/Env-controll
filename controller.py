@@ -94,6 +94,7 @@ def condition_control():
     while True:
         sensor_data = generate_sensor_data(shared_state.light_state)
         humidity = sensor_data.humidity
+        temperature = sensor_data.temperature
 
         # Control humidifier
         if humidity < 70 and not humidifier_on:
@@ -108,12 +109,13 @@ def condition_control():
                 humidifier_on = False
 
         # Control dehumidifier
-        if humidity > 80 and not dehumidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity > 80):
+        if humidity > 80 or temperature > 24 and not dehumidifier_on:
+        
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity > 80 or generate_sensor_data(shared_state.light_state).temperature > 24):
                 print("Turning on dehumidifier...")
                 threading.Thread(target=dehumidifier_control, args=(True,)).start()
                 dehumidifier_on = True
-        elif humidity <= 78 and dehumidifier_on:
+        elif humidity <= 65 or temperature < 23.5 and dehumidifier_on:
            
                 print("Turning off dehumidifier...")
                 threading.Thread(target=dehumidifier_control, args=(False,)).start()
