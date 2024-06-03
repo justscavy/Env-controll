@@ -110,8 +110,8 @@ def condition_control():
         temperature = sensor_data.temperature
 
         # Control humidifier(fan bot of tent)
-        if humidity < 70 and not humidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 70):
+        if humidity < 65 and not humidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 65):
                 print("Turning on humidifier for 5 seconds")
                 threading.Thread(target=humidifier_control, args=(True,)).start()
                 #humidifier_on_for_duration()
@@ -125,13 +125,13 @@ def condition_control():
             humidifier_on = False
 
         # Control dehumidifier(fan on bottom of tent)
-        if humidity > 80 or temperature > 24 and not dehumidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 80 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
-                print("Turning on dehumidifier...")
+        if humidity > 70 or temperature > 24 and not dehumidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 70 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
+                print("Turning on dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(True,)).start()
                 dehumidifier_on = True
-        elif humidity <= 65 or temperature < 23.5 and dehumidifier_on:
-                print("Turning off dehumidifier...")
+        elif humidity <= 60 or temperature < 23.5 and dehumidifier_on:
+                print("Turning off dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(False,)).start()
                 dehumidifier_on = False
 
