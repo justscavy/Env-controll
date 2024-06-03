@@ -16,8 +16,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier
-#GPIO.setup(18, GPIO.OUT) 
-
+#GPIO.setup(18, GPIO.OUT)
 
 gpio_lock = threading.Lock()
 
@@ -28,10 +27,8 @@ def cleanup_gpio():
     #GPIO.output(18, GPIO.LOW)
     GPIO.cleanup()
 
-# turn of relais on exit
+# Turn off relays on exit
 atexit.register(cleanup_gpio)
-
-#GPIO.output(18, GPIO.HIGH)
 
 def humidifier_control(turn_on):
     with gpio_lock:
@@ -41,6 +38,13 @@ def humidifier_control(turn_on):
     else:
         print("Humidifier is off.")
 
+def dehumidifier_control(turn_on):
+    with gpio_lock:
+        GPIO.output(17, GPIO.HIGH if turn_on else GPIO.LOW)
+    if turn_on:
+        print("Dehumidifier is on.")
+    else:
+        print("Dehumidifier is off.")
 
 def turn_on_light():
     with gpio_lock:
@@ -53,7 +57,6 @@ def turn_off_light():
         GPIO.output(23, GPIO.LOW)
     shared_state.light_state = 0
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
-
 
 def light_control():
     # Get the current time
@@ -74,10 +77,8 @@ def light_control():
     while True:
         schedule.run_pending()
         dt.sleep(1)
-        
 
-
-#avoid devices turning on/off 
+# Avoid devices turning on/off frequently
 def debounce_check(condition_func, duration=30, check_interval=1):
     start_time = datetime.now()
     while (datetime.now() - start_time).total_seconds() < duration:
@@ -88,11 +89,14 @@ def debounce_check(condition_func, duration=30, check_interval=1):
 
 def condition_control():
     humidifier_on = False
+    dehumidifier_on = False
 
     while True:
         sensor_data = generate_sensor_data(shared_state.light_state)
         humidity = sensor_data.humidity
+        temperature = sensor_data.temperature
 
+        # Control humidifier
         if humidity < 70 and not humidifier_on:
             if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity < 70):
                 print("Turning on humidifier...")
@@ -104,8 +108,19 @@ def condition_control():
                 threading.Thread(target=humidifier_control, args=(False,)).start()
                 humidifier_on = False
 
+        # Control dehumidifier
+        if humidity > 80 or temperature > 24 and not dehumidifier_on:
+        
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state).humidity > 80 or generate_sensor_data(shared_state.light_state).temperature > 24):
+                print("Turning on dehumidifier...")
+                threading.Thread(target=dehumidifier_control, args=(True,)).start()
+                dehumidifier_on = True
+        elif humidity <= 65 or temperature < 23.5 and dehumidifier_on:
+           
+                print("Turning off dehumidifier...")
+                threading.Thread(target=dehumidifier_control, args=(False,)).start()
+                dehumidifier_on = False
+
         dt.sleep(1)
-
-
 
 

@@ -15,6 +15,7 @@ class SensorData:
     humidity: float
     vpd: float
     light_state: int
+    humidifier_state: int
 
 # Function to load calibration parameters
 def load_calibration_params():
@@ -23,7 +24,7 @@ def load_calibration_params():
 # Load calibration parameters
 calibration_params = load_calibration_params()
 
-def generate_sensor_data(light_state):
+def generate_sensor_data(light_state, humidifier_state):
     # Read sensor data
     data = bme280.sample(bus, address, calibration_params)
     
@@ -40,4 +41,4 @@ def generate_sensor_data(light_state):
     actual_vapor_pressure = (adjusted_humidity / 100) * saturation_vapor_pressure
     vpd = saturation_vapor_pressure - actual_vapor_pressure
     
-    return SensorData(temperature=adjusted_temperature, pressure=data.pressure, humidity=adjusted_humidity, vpd=vpd, light_state=light_state)
+    return SensorData(temperature=adjusted_temperature, pressure=data.pressure, humidity=adjusted_humidity, vpd=vpd, light_state=light_state, humidifier_state=humidifier_state)

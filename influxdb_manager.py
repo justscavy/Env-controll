@@ -1,3 +1,4 @@
+# influxdb_manager.py
 from datetime import datetime
 import time
 from influxdb_client import InfluxDBClient, Point
@@ -8,6 +9,7 @@ from sensor import generate_sensor_data
 from email_notification import check_conditions, send_email
 from shared_state import shared_state
 
+
 # Init auth config
 config_manager = ConfigManager("config/config.json")
 
@@ -17,22 +19,24 @@ client = InfluxDBClient(url=config_manager.influxdb_config.url,
                         org=config_manager.influxdb_config.org)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
-
-
-
-
 connection_lost_time = None
 connection_alert_time = 0
 
+
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sensor_data = generate_sensor_data(shared_state.light_state)
+    sensor_data = generate_sensor_data(shared_state.light_state, shared_state.humidifier_state)
+
+
     point = Point("sensor_data").tag("location", "indoor") \
                                  .field("temperature", sensor_data.temperature) \
                                  .field("pressure", sensor_data.pressure) \
                                  .field("humidity", sensor_data.humidity) \
                                  .field("vpd", sensor_data.vpd) \
-                                 .field("light_state", shared_state.light_state)
+                                 .field("light_state", shared_state.light_state) \
+                                 .field("humid1_state", shared_state.humidifier_state) 
+                                 
+                                
 
     try:
         write_api.write(bucket=config_manager.influxdb_config.bucket, record=point)
