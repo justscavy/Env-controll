@@ -113,11 +113,12 @@ def condition_control():
         if humidity < 70 and not humidifier_on:
             if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 70):
                 print("Turning on humidifier for 5 seconds")
-                humidifier_on_for_duration()
+                threading.Thread(target=humidifier_control, args=(True,)).start()
+                #humidifier_on_for_duration()
                 humidifier_on = True
                 print("Turning off humidifier")
-                dt.sleep(5)  # Sleep for 5 seconds to match the humidifier on duration
-                humidifier_on = False
+                #dt.sleep(5)  # Sleep for 5 seconds to match the humidifier on duration
+                #humidifier_on = False
         elif humidity >= 75 and humidifier_on:
             print("Turning off humidifier")
             threading.Thread(target=humidifier_control, args=(False,)).start()
