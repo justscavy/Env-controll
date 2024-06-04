@@ -3,9 +3,13 @@ import time
 import os
 
 # Directory to save images
-output_dir = '/media/adminbox/ESD-USB1'
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+output_dir = '/home/adminbox/Env-controll/video'
+try:
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+except Exception as e:
+    print(f"Error: Could not create directory {output_dir}. {e}")
+    exit()
 
 # Set up the video capture with the USB camera
 cap = cv2.VideoCapture(0)
@@ -21,17 +25,22 @@ try:
     while True:
         ret, frame = cap.read()
         if ret:
-            # Save the frame as an image
-            image_path = os.path.join(output_dir, f'frame_{frame_count:04d}.jpg')
-            cv2.imwrite(image_path, frame)
-            frame_count += 1
-            print(f'Captured {image_path}')
+            try:
+                # Save the frame as an image
+                image_path = os.path.join(output_dir, f'frame_{frame_count:04d}.jpg')
+                cv2.imwrite(image_path, frame)
+                frame_count += 1
+                print(f'Captured {image_path}')
+            except Exception as e:
+                print(f"Error: Could not save frame to {image_path}. {e}")
         else:
             print("Error: Could not read frame.")
 
         # Wait for the specified interval
         time.sleep(interval)
 except KeyboardInterrupt:
-    print("Timelapse capture stopped.")
+    print("Timelapse capture stopped by user.")
 finally:
     cap.release()
+    cv2.destroyAllWindows()
+    print("Camera and all windows released.")

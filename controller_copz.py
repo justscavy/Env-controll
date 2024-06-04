@@ -27,7 +27,7 @@ def cleanup_gpio():
     #GPIO.output(18, GPIO.LOW)
     GPIO.cleanup()
 
-# Turn off relays on exit
+# Turn off relais on exit
 atexit.register(cleanup_gpio)
 
 def humidifier_control(turn_on):
@@ -58,7 +58,7 @@ def turn_off_light():
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state, shared_state.humidifier_state}")
 
 def light_control():
-    # Get the current time
+
     now = datetime.now().time()
 
     turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()

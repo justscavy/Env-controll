@@ -110,8 +110,8 @@ def condition_control():
         temperature = sensor_data.temperature
 
         # Control humidifier(fan bot of tent)
-        if humidity < 65 and not humidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 65):
+        if humidity < 72 and not humidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 72):
                 print("Turning on humidifier for 5 seconds")
                 threading.Thread(target=humidifier_control, args=(True,)).start()
                 #humidifier_on_for_duration()
@@ -119,18 +119,18 @@ def condition_control():
                 print("Turning off humidifier")
                 #dt.sleep(5)  # Sleep for 5 seconds to match the humidifier on duration
                 #humidifier_on = False
-        elif humidity >= 75 and humidifier_on:
+        elif humidity >= 80 and humidifier_on:
             print("Turning off humidifier")
             threading.Thread(target=humidifier_control, args=(False,)).start()
             humidifier_on = False
 
         # Control dehumidifier(fan on bottom of tent)
-        if humidity > 75 or temperature > 24 and not dehumidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 75 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
+        if humidity > 82 or temperature > 24 and not dehumidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 82 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
                 print("Turning on dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(True,)).start()
                 dehumidifier_on = True
-        elif humidity <= 60 or temperature < 23.5 and dehumidifier_on:
+        elif humidity <= 75 or temperature < 23.5 and dehumidifier_on:
                 print("Turning off dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(False,)).start()
                 dehumidifier_on = False
