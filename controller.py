@@ -125,8 +125,8 @@ def condition_control():
             humidifier_on = False
 
         # Control dehumidifier(fan on bottom of tent)
-        if humidity > 70 or temperature > 24 and not dehumidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 70 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
+        if humidity > 75 or temperature > 24 and not dehumidifier_on:
+            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 75 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
                 print("Turning on dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(True,)).start()
                 dehumidifier_on = True
