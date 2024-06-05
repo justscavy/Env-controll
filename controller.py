@@ -8,7 +8,6 @@ from sensor import generate_sensor_data
 import atexit
 from shared_state import shared_state
 
-
 # GPIO 23 - Main Light 230V
 # GPIO 24 - Humidifier
 # GPIO 17 - Dehumidifier
@@ -18,25 +17,19 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier
-# GPIO.setup(18, GPIO.OUT)
 
 gpio_lock = threading.Lock()
-
 
 def cleanup_gpio():
     GPIO.output(23, GPIO.LOW)
     GPIO.output(24, GPIO.LOW)
     GPIO.output(17, GPIO.LOW)
-    # GPIO.output(18, GPIO.LOW)
     GPIO.cleanup()
 
 # Turn off relays on exit
 atexit.register(cleanup_gpio)
 
-
-
 def humidifier_control(turn_on):
-
     with gpio_lock:
         GPIO.output(24, GPIO.HIGH if turn_on else GPIO.LOW)
     if turn_on:
@@ -50,7 +43,7 @@ def humidifier_on_for_duration():
     threading.Thread(target=humidifier_control, args=(True,)).start()
     dt.sleep(5)
     threading.Thread(target=humidifier_control, args=(False,)).start()
-    
+
 def dehumidifier_control(turn_on):
     with gpio_lock:
         GPIO.output(17, GPIO.HIGH if turn_on else GPIO.LOW)
@@ -105,34 +98,31 @@ def condition_control():
     dehumidifier_on = False
 
     while True:
-        sensor_data = generate_sensor_data(shared_state.light_state, shared_state.humidifier_state)
+        sensor_data = generate_sensor_data()
         humidity = sensor_data.humidity
         temperature = sensor_data.temperature
 
         # Control humidifier(fan bot of tent)
         if humidity < 72 and not humidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity < 72):
+            if debounce_check(lambda: generate_sensor_data().humidity < 72):
                 print("Turning on humidifier for 5 seconds")
                 threading.Thread(target=humidifier_control, args=(True,)).start()
-                #humidifier_on_for_duration()
                 humidifier_on = True
                 print("Turning off humidifier")
-                #dt.sleep(5)  # Sleep for 5 seconds to match the humidifier on duration
-                #humidifier_on = False
         elif humidity >= 80 and humidifier_on:
             print("Turning off humidifier")
             threading.Thread(target=humidifier_control, args=(False,)).start()
             humidifier_on = False
 
         # Control dehumidifier(fan on bottom of tent)
-        if humidity > 82 or temperature > 24 and not dehumidifier_on:
-            if debounce_check(lambda: generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).humidity > 82 or generate_sensor_data(shared_state.light_state, shared_state.humidifier_state).temperature > 24):
+        if (humidity > 82 or temperature > 24) and not dehumidifier_on:
+            if debounce_check(lambda: generate_sensor_data().humidity > 82 or generate_sensor_data().temperature > 24):
                 print("Turning on dehumidifier(fan)")
                 threading.Thread(target=dehumidifier_control, args=(True,)).start()
                 dehumidifier_on = True
-        elif humidity <= 75 or temperature < 23.5 and dehumidifier_on:
-                print("Turning off dehumidifier(fan)")
-                threading.Thread(target=dehumidifier_control, args=(False,)).start()
-                dehumidifier_on = False
+        elif (humidity <= 75 or temperature < 23.5) and dehumidifier_on:
+            print("Turning off dehumidifier(fan)")
+            threading.Thread(target=dehumidifier_control, args=(False,)).start()
+            dehumidifier_on = False
 
         dt.sleep(1)

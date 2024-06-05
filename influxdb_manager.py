@@ -9,7 +9,6 @@ from sensor import generate_sensor_data
 from email_notification import check_conditions, send_email
 from shared_state import shared_state
 
-
 # Init auth config
 config_manager = ConfigManager("config/config.json")
 
@@ -22,25 +21,21 @@ write_api = client.write_api(write_options=SYNCHRONOUS)
 connection_lost_time = None
 connection_alert_time = 0
 
-
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sensor_data = generate_sensor_data(shared_state.light_state, shared_state.humidifier_state)
-
+    sensor_data = generate_sensor_data()
 
     point = Point("sensor_data").tag("location", "indoor") \
-                                 .field("temperature", sensor_data.temperature) \
-                                 .field("pressure", sensor_data.pressure) \
-                                 .field("humidity", sensor_data.humidity) \
-                                 .field("vpd", sensor_data.vpd) \
-                                 .field("light_state", shared_state.light_state) \
-                                 .field("humid1_state", shared_state.humidifier_state) 
-                                 
-                                
-
+                                .field("temperature", sensor_data.temperature) \
+                                .field("pressure", sensor_data.pressure) \
+                                .field("humidity", sensor_data.humidity) \
+                                .field("vpd", sensor_data.vpd) 
+    
+    state_point = Point("state_data").tag("location", "indoor") \
+                                     .field("light_state", shared_state.light_state) \
+                                     .field("humidifier_state", shared_state.humidifier_state)
     try:
-        write_api.write(bucket=config_manager.influxdb_config.bucket, record=point)
-        #print(f"Sensor data written to InfluxDB at {current_time} with light state {shared_state.light_state}")
+        write_api.write(bucket=config_manager.influxdb_config.bucket, record=[point, state_point])
         shared_state.last_successful_write = time.time()  # Update the last successful write time
     except Exception as e:
         print(f"Failed to write data to InfluxDB: {e}")
