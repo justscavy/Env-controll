@@ -53,3 +53,6 @@ def timelapse():
         cap.release()
         cv2.destroyAllWindows()
         print("Camera and all windows released.")
+
+
+timelapse()
