@@ -1,37 +1,64 @@
-import random
-from sensor import SensorData
-from math import exp
-from dataclasses import dataclass
-import smbus2
-import bme280
+import cv2
+import os
 
-# Define the I2C address and bus
-address = 0x76
-bus = smbus2.SMBus(1)
+# Directory to save images
+output_dir = '/home/adminbox/Env-controll/video'
+try:
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+except Exception as e:
+    print(f"Error: Could not create directory {output_dir}. {e}")
+    exit()
 
-# Load calibration parameters
-calibration_params = bme280.load_calibration_params(bus, address)
+# Function to find a working video device
+def find_working_device():
+    for device_index in range(32):  # Assuming the device indices range from 0 to 31
+        cap = cv2.VideoCapture(device_index)
+        if cap.isOpened():
+            ret, frame = cap.read()
+            if ret:
+                print(f"Video device /dev/video{device_index} is working.")
+                cap.release()
+                return device_index
+            cap.release()
+    return -1
 
-@dataclass
-class SensorData:
-    temperature: float
-    pressure: float
-    humidity: float
-    vpd: float
+# Find the working video device
+device_index = find_working_device()
+if device_index == -1:
+    print("Error: Could not find any working video device.")
+    exit()
 
-def read_sensor_data():
-    # Read sensor data
-    data = bme280.sample(bus, address, calibration_params)
-    # Extract temperature, pressure, and humidity
-    
-    # Calculate saturation vapor pressure (in kPa)
-    saturation_vapor_pressure = 0.611 * exp((17.27 * data.temperature) / (data.temperature + 237.3))
-    actual_vapor_pressure = (data.humidity / 100) * saturation_vapor_pressure
-    vpd = saturation_vapor_pressure - actual_vapor_pressure
-    
+# Set up the video capture with the found video device
+cap = cv2.VideoCapture(device_index)
+if not cap.isOpened():
+    print(f"Error: Could not open camera at /dev/video{device_index}.")
+    exit()
 
-    return SensorData(temperature=data.temperature, pressure=data.pressure, humidity=data.humidity, vpd=vpd)
+# Capture interval in seconds (e.g., capture every 10 minutes)
+interval = 360
 
-# Main function to read and print sensor data
-if __name__ == "__main__":
-    sensor_data = read_sensor_data()
+try:
+    frame_count = 0
+    while True:
+        ret, frame = cap.read()
+        if ret:
+            try:
+                # Save the frame as an image
+                image_path = os.path.join(output_dir, f'frame_{frame_count:04d}.jpg')
+                cv2.imwrite(image_path, frame)
+                frame_count += 1
+                print(f'Captured {image_path}')
+            except Exception as e:
+                print(f"Error: Could not save frame to {image_path}. {e}")
+        else:
+            print("Error: Could not read frame.")
+
+        # Wait for the specified interval
+        time.sleep(interval)
+except KeyboardInterrupt:
+    print("Timelapse capture stopped by user.")
+finally:
+    cap.release()
+    cv2.destroyAllWindows()
+    print("Camera and all windows released.")
