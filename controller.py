@@ -125,7 +125,7 @@ def condition_control():
                     print("Turning on dehumidifier")
                     dehumidifier_control(True)
                     dehumidifier_on = True
-            elif (humidity <= 75 or temperature < 23.5) and dehumidifier_on:
+            elif (humidity <= 70 or temperature < 23.5) and dehumidifier_on:
                 print("Turning off dehumidifier")
                 dehumidifier_control(False)
                 dehumidifier_on = False
@@ -154,7 +154,7 @@ def condition_control():
                     print("Turning on dehumidifier")
                     dehumidifier_control(True)
                     dehumidifier_on = True
-            elif (humidity <= 70 or temperature < 18.5) and dehumidifier_on:
+            elif (humidity <= 72 or temperature < 18.5) and dehumidifier_on:
                 print("Turning off dehumidifier")
                 dehumidifier_control(False)
                 dehumidifier_on = False
