@@ -47,8 +47,10 @@ def dehumidifier_control(turn_on):
     with gpio_lock:
         GPIO.output(17, GPIO.HIGH if turn_on else GPIO.LOW)
     if turn_on:
+        shared_state.dehumidifier_state = 1
         print("Dehumidifier is on.")
     else:
+        shared_state.dehumidifier_state = 0
         print("Dehumidifier is off.")
 
 def turn_on_light():
@@ -110,10 +112,10 @@ def condition_control():
                     print("Turning on humidifier")
                     humidifier_control(True)
                     humidifier_on = True
-                    dt.sleep(5)  # Keep humidifier on for 5 seconds
-                    print("Turning off humidifier after 5 seconds")
-                    humidifier_control(False)
-                    humidifier_on = False
+                    #dt.sleep(5)  # Keep humidifier on for 5 seconds
+                    #print("Turning off humidifier after 5 seconds")
+                    #humidifier_control(False)
+                    #humidifier_on = False
             elif humidity >= 80 and humidifier_on:
                 print("Turning off humidifier")
                 humidifier_control(False)
@@ -139,10 +141,10 @@ def condition_control():
                     print("Turning on humidifier")
                     humidifier_control(True)
                     humidifier_on = True
-                    dt.sleep(5)  # Keep humidifier on for 5 seconds
-                    print("Turning off humidifier after 5 seconds")
-                    humidifier_control(False)
-                    humidifier_on = False
+                    #dt.sleep(5)  # Keep humidifier on for 5 secondss
+                    #print("Turning off humidifier after 5 seconds")
+                    #humidifier_control(False)
+                    #humidifier_on = False
             elif humidity >= 68 and humidifier_on:
                 print("Turning off humidifier")
                 humidifier_control(False)

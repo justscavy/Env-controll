@@ -33,7 +33,8 @@ def write_to_influxdb() -> None:
     
     state_point = Point("state_data").tag("location", "indoor") \
                                      .field("light_state", shared_state.light_state) \
-                                     .field("humidifier_state", shared_state.humidifier_state)
+                                     .field("humidifier_state", shared_state.humidifier_state) \
+                                     .field("dehumidifier_state", shared_state.dehumidifier_state)
     try:
         write_api.write(bucket=config_manager.influxdb_config.bucket, record=[point, state_point])
         shared_state.last_successful_write = time.time()  # Update the last successful write time
