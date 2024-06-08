@@ -102,7 +102,7 @@ def condition_control():
         with gpio_lock:
             light_state = shared_state.light_state
         
-        # Control logic when the light is ON
+     
         if light_state == 1:
             # Control humidifier
             if humidity < 72 and not humidifier_on:

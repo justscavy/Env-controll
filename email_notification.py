@@ -25,7 +25,7 @@ def send_email(subject, body, to_email):
         print(f"Failed to send email: {e}")
 
 
-# Variables to track out-of-range time and last email sent time
+#track out-of-range time and last email sent time
 out_of_range_start_time_temp = None
 out_of_range_start_time_humidity = None
 last_email_sent_time = None

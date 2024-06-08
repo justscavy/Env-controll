@@ -122,12 +122,12 @@ def condition_control():
                 humidifier_on = False
 
             # Control dehumidifier
-            if (humidity > 82 or temperature > 24) and not dehumidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity > 82 or generate_sensor_data().temperature > 24):
+            if (humidity > 82 or temperature > 23.5) and not dehumidifier_on:
+                if debounce_check(lambda: generate_sensor_data().humidity > 82 or generate_sensor_data().temperature > 23.5):
                     print("Turning on dehumidifier")
                     dehumidifier_control(True)
                     dehumidifier_on = True
-            elif (humidity <= 70 or temperature < 23.5) and dehumidifier_on:
+            elif (humidity <= 70 or temperature < 22.5) and dehumidifier_on:
                 print("Turning off dehumidifier")
                 dehumidifier_control(False)
                 dehumidifier_on = False
@@ -151,12 +151,12 @@ def condition_control():
                 humidifier_on = False
 
             # Control dehumidifier
-            if (humidity > 75 or temperature > 22) and not dehumidifier_on:
+            if (temperature > 25) and not dehumidifier_on:
                 if debounce_check(lambda: generate_sensor_data().humidity > 75 or generate_sensor_data().temperature > 22):
                     print("Turning on dehumidifier")
                     dehumidifier_control(True)
                     dehumidifier_on = True
-            elif (humidity <= 72 or temperature < 18.5) and dehumidifier_on:
+            elif (temperature < 23.5) and dehumidifier_on:
                 print("Turning off dehumidifier")
                 dehumidifier_control(False)
                 dehumidifier_on = False

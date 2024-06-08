@@ -20,7 +20,3 @@ with imageio.get_writer(output_video, fps=30) as writer:
 print(f'Timelapse video saved to {output_video}')
 
 
-
-
-python /path/to/timelapse_capture.py
-python /path/to/create_timelapse_video.py
