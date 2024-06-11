@@ -84,7 +84,7 @@ def light_control():
         dt.sleep(1)
 
 
-def debounce_check(condition_func, duration=15, check_interval=1):
+def debounce_check(condition_func, duration=5, check_interval=1):
     start_time = datetime.now()
     while (datetime.now() - start_time).total_seconds() < duration:
         if not condition_func():
@@ -116,8 +116,8 @@ def condition_control():
                     #print("Turning off humidifier after 5 seconds")
                     #humidifier_control(False)
                     #humidifier_on = False
-            elif humidity >= 78 and humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity > 78):
+            elif humidity >= 75 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().humidity >= 75):
                     print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
