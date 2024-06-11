@@ -84,7 +84,7 @@ def light_control():
         dt.sleep(1)
 
 
-def debounce_check(condition_func, duration=30, check_interval=1):
+def debounce_check(condition_func, duration=15, check_interval=1):
     start_time = datetime.now()
     while (datetime.now() - start_time).total_seconds() < duration:
         if not condition_func():
@@ -116,10 +116,11 @@ def condition_control():
                     #print("Turning off humidifier after 5 seconds")
                     #humidifier_control(False)
                     #humidifier_on = False
-            elif humidity >= 80 and humidifier_on:
-                print("Turning off humidifier")
-                humidifier_control(False)
-                humidifier_on = False
+            elif humidity >= 78 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().humidity > 78):
+                    print("Turning off humidifier")
+                    humidifier_control(False)
+                    humidifier_on = False
 
             # Control dehumidifier
             if (humidity > 82 or temperature > 23.5) and not dehumidifier_on:
@@ -136,8 +137,8 @@ def condition_control():
         # Control logic when the light is OFF
         else:
             # Control humidifier
-            if humidity < 55 and not humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity < 55):
+            if humidity < 65 and not humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().humidity < 65):
                     print("Turning on humidifier")
                     humidifier_control(True)
                     humidifier_on = True
@@ -145,10 +146,11 @@ def condition_control():
                     #print("Turning off humidifier after 5 seconds")
                     #humidifier_control(False)
                     #humidifier_on = False
-            elif humidity >= 68 and humidifier_on:
-                print("Turning off humidifier")
-                humidifier_control(False)
-                humidifier_on = False
+            elif humidity >= 70 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().humidity < 70):
+                   print("Turning off humidifier")
+                   humidifier_control(False)
+                   humidifier_on = False
 
             # Control dehumidifier
             if (temperature > 28 or humidity > 90) and not dehumidifier_on:

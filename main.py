@@ -4,7 +4,7 @@ from controller import condition_control, light_control
 from influxdb_manager import write_to_influxdb
 #import sys
 #sys.path.append('/home/adminbox/Env-controll/video')
-#from video.timelapse_capture import timelapse
+#from video.timelapse_capture import timelapse\
 
 
 if __name__ == "__main__":
@@ -17,4 +17,3 @@ if __name__ == "__main__":
     while True:
         write_to_influxdb()
         time.sleep(1)
-
