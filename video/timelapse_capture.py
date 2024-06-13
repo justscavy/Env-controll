@@ -23,7 +23,7 @@ def timelapse():
                 frame_num = int(match.group(1))
                 max_frame = max(max_frame, frame_num)
         return max_frame
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         print("Error: Could not open camera.")
         exit()
