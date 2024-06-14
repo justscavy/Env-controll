@@ -32,10 +32,10 @@ def humidifier_control(turn_on):
     with gpio_lock:
         GPIO.output(24, GPIO.HIGH if turn_on else GPIO.LOW)
     if turn_on:
-        shared_state.humidifier_state = 1
+        shared_state.humidifier_state = 0
         print(f"Humidifier is on. {shared_state.humidifier_state}")
     else:
-        shared_state.humidifier_state = 0
+        shared_state.humidifier_state = 1
         print(f"Humidifier is off. {shared_state.humidifier_state}")
 
 def humidifier_on_for_duration():
@@ -47,22 +47,22 @@ def dehumidifier_control(turn_on):
     with gpio_lock:
         GPIO.output(17, GPIO.HIGH if turn_on else GPIO.LOW)
     if turn_on:
-        shared_state.dehumidifier_state = 1
+        shared_state.dehumidifier_state = 0
         print("Dehumidifier is on.")
     else:
-        shared_state.dehumidifier_state = 0
+        shared_state.dehumidifier_state = 1
         print("Dehumidifier is off.")
 
 def turn_on_light():
     with gpio_lock:
         GPIO.output(23, GPIO.HIGH)
-    shared_state.light_state = 1
+    shared_state.light_state = 0
     print(f"Light turned on at {datetime.now()} with state {shared_state.light_state}")
 
 def turn_off_light():
     with gpio_lock:
         GPIO.output(23, GPIO.LOW)
-    shared_state.light_state = 0
+    shared_state.light_state = 1
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
 def light_control():
@@ -94,44 +94,39 @@ def debounce_check(condition_func, duration=5, check_interval=1):
 
 def condition_control():
     humidifier_on = False
-    dehumidifier_on = False
 
     while True:
         sensor_data = generate_sensor_data()
-        humidity = sensor_data.humidity
-        temperature = sensor_data.temperature
-        
+        vpd = sensor_data.vpd
         with gpio_lock:
             light_state = shared_state.light_state
         
-        # Control logic when the light is ON
-        if light_state == 1:
-            # Control humidifier
-            if humidity < 70 and not humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity < 72):
+       # we gotta set flags to oposit since we use nc ssr"s now
+        if light_state == 0:
+            
+            if vpd > 0.85 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")
-                    humidifier_control(True)
-                    humidifier_on = True
-            elif humidity >= 80 and humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity >= 90):
-                    print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
+            elif vpd < 0.75 and not humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
+                    print("Turning off humidifier")
+                    humidifier_control(True)
+                    humidifier_on = True
 
-        # Control logic when the light is OFF
+     
         else:
-            # Control humidifier
-            if humidity < 65 and not humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity < 65):
+        
+            if vpd > 0.85 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")
-                    humidifier_control(True)
-                    humidifier_on = True
-            elif humidity >= 80 and humidifier_on:
-                if debounce_check(lambda: generate_sensor_data().humidity >= 90):
-                    print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
+            elif vpd < 0.75 and not humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
+                    print("Turning off humidifier")
+                    humidifier_control(True)
+                    humidifier_on = True
 
         dt.sleep(1)
-
-

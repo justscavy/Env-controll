@@ -103,7 +103,6 @@ def condition_control():
         
        # we gotta set flags to oposit since we use nc ssr"s now
         if light_state == 1:
-            
             if vpd > 0.85 and humidifier_on:
                 if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")
@@ -117,7 +116,6 @@ def condition_control():
 
      
         else:
-        
             if vpd > 0.85 and humidifier_on:
                 if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")
@@ -130,4 +128,3 @@ def condition_control():
                     humidifier_on = True
 
         dt.sleep(1)
-
