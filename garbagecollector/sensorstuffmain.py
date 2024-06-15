@@ -4,7 +4,7 @@ import bme280
 import math
 from datetime import datetime, timedelta
 from sensor import SensorData  # Import the SensorData dataclass
-from email_notification import send_email  # Import the send_email function
+from notification_manager import send_email  # Import the send_email function
 
 '''
 I2C communication is not enabled by default. You need to enable it manually.

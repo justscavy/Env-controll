@@ -1,4 +1,3 @@
-# sensor.py
 import random
 from math import exp
 from dataclasses import dataclass
