@@ -15,7 +15,7 @@ from shared_state import shared_state
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier
-GPIO.setup(17, GPIO.OUT)  # Dehumidifier
+GPIO.setup(17, GPIO.OUT)  # Dehumidifier Not used right now
 
 gpio_lock = threading.Lock()
 
@@ -39,12 +39,12 @@ def humidifier_control(turn_on):
         shared_state.humidifier_state = 1
         print(f"Humidifier is off. {shared_state.humidifier_state}")
 
-def humidifier_on_for_duration():
+def humidifier_on_for_duration(): #TODO: not needed atm
     threading.Thread(target=humidifier_control, args=(True,)).start()
     dt.sleep(5)
     threading.Thread(target=humidifier_control, args=(False,)).start()
 
-def dehumidifier_control(turn_on):
+def dehumidifier_control(turn_on): #TODO: not needed atm
     with gpio_lock:
         GPIO.output(17, GPIO.HIGH if turn_on else GPIO.LOW)
     if turn_on:
@@ -101,7 +101,7 @@ def condition_control():
         vpd = sensor_data.vpd
         with gpio_lock:
             light_state = shared_state.light_state
-       # we gotta set flags to oposit since we use nc ssr"s now
+       # we gotta set flags to oposit since we use low trigger ssr"s now
 
 
        #LIGHT STATE ON

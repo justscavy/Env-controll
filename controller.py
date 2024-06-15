@@ -56,13 +56,13 @@ def dehumidifier_control(turn_on): #TODO: not needed atm
 
 def turn_on_light():
     with gpio_lock:
-        GPIO.output(23, GPIO.HIGH)
+        GPIO.output(23, GPIO.LOW)
     shared_state.light_state = 0
     print(f"Light turned on at {datetime.now()} with state {shared_state.light_state}")
 
 def turn_off_light():
     with gpio_lock:
-        GPIO.output(23, GPIO.LOW)
+        GPIO.output(23, GPIO.HIGH)
     shared_state.light_state = 1
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
