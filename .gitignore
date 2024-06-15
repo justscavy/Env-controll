@@ -160,7 +160,7 @@ cython_debug/
 
 
 *.db
-
+*copy.py
 *.key
 *.jpg
 influxdata-archive_compat.key

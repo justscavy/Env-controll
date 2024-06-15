@@ -3,7 +3,7 @@ from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from sensor import generate_sensor_data
 from classes import SensorData
-from email_notification import check_conditions
+from notification_manager import check_conditions
 
 class InfluxDBWriter:
     def __init__(self, config_path: str):

@@ -19,6 +19,7 @@ GPIO.setup(17, GPIO.OUT)  # Dehumidifier
 
 gpio_lock = threading.Lock()
 
+
 def cleanup_gpio():
     GPIO.output(23, GPIO.LOW)
     GPIO.output(24, GPIO.LOW)
@@ -66,7 +67,7 @@ def turn_off_light():
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
 def light_control():
-    # Get the current time
+   
     now = datetime.now().time()
 
     turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
@@ -100,10 +101,11 @@ def condition_control():
         vpd = sensor_data.vpd
         with gpio_lock:
             light_state = shared_state.light_state
-        
        # we gotta set flags to oposit since we use nc ssr"s now
+
+
+       #LIGHT STATE ON
         if light_state == 0:
-            
             if vpd > 0.85 and humidifier_on:
                 if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")
@@ -114,10 +116,8 @@ def condition_control():
                     print("Turning off humidifier")
                     humidifier_control(True)
                     humidifier_on = True
-
-     
+        #LIGHT STATE OFF
         else:
-        
             if vpd > 0.85 and humidifier_on:
                 if debounce_check(lambda: generate_sensor_data().vpd > 0.85):
                     print("Turning on humidifier")

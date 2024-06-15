@@ -6,7 +6,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 from sensor import SensorData
 from config_manager import ConfigManager
 from sensor import generate_sensor_data
-from email_notification import check_conditions, send_email
+from notification_manager import check_conditions, send_email
 from shared_state import shared_state
 
 # Init auth config
