@@ -1,34 +1,45 @@
-import time
 import smbus2
 import bme280
 import math
-from datetime import datetime, timedelta
-from sensor import SensorData  # Import the SensorData dataclass
-from notification_manager import send_email  # Import the send_email function
 
-'''
-I2C communication is not enabled by default. You need to enable it manually.
-Open a terminal window on your Raspberry Pi and type the following command:
+def scan_i2c_bus(bus):
+    print("Scanning I2C bus...")
+    devices = []
+    for address in range(128):
+        try:
+            bus.read_byte(address)
+            devices.append(hex(address))
+        except OSError:
+            pass  # No device at this address
+    return devices
 
-sudo raspi-config
-Interface Options Configure connections to peripherals      select
-I2C Enable/disable automatic loading of I2  kernel module   enable
-sudo reboot
-'''
+# Initialize I2C bus
+i2c_bus = smbus2.SMBus(1)  # Ensure you are using SMBus from smbus2
 
-'''
-With the sensor connected to the Raspberry Pi, lets check if the sensor is connected properly by searching for its I2C address.
-Open a Terminal window on your Raspberry Pi and run the following command:
+# Scan the I2C bus
+devices = scan_i2c_bus(i2c_bus)
 
-sudo i2cdetect -y 1
-sudo pip install --upgrade pip
-sudo pip install RPI.BME280
-'''
+if devices:
+    print("Found I2C devices at addresses:", devices)
+else:
+    print("No I2C devices found")
+
+# You can add code here to initialize the BME280 sensors using the detected addresses
+for device in devices:
+    if device in ['0x76', '0x77']:
+        print(f"Initializing BME280 sensor at address {device}")
+        address = int(device, 16)
+        # Load calibration parameters
+        bme280.load_calibration_params(i2c_bus, address)
+        # Example readout (assuming a readout function exists in your implementation)
+        data = bme280.sample(i2c_bus, address)
+        print(f"Temperature: {data.temperature:.2f} °C, Pressure: {data.pressure:.2f} hPa, Humidity: {data.humidity:.2f} %")
 
 
 
+"""
 #Define the I2C address and bus
-address = 0x76
+address = 0x77
 bus = smbus2.SMBus(1)
 
 #Load calibration parameters
@@ -38,11 +49,7 @@ calibration_params = bme280.load_calibration_params(bus, address)
 out_of_range_start_time = None
 
 
-def vpd_converter(temperature_celsius, humidity):
-    e_s = 0.6108 * math.exp((17.27 * temperature_celsius) / (temperature_celsius + 237.3))
-    e_a = e_s * (humidity / 100.0)
-    vpd = e_s - e_a
-    return vpd
+
 
 def read_sensor_data():
     
@@ -52,13 +59,5 @@ def read_sensor_data():
     temperature_celsius = data.temperature
     pressure = data.pressure
     humidity = data.humidity
-    # Estimate leaf temperature (4-6°C cooler than room temperature)
-    leaf_temperature_celsius = temperature_celsius - 5  # Adjust as needed
-    # Calculate VPD using leaf temperature
-    vpd = vpd_converter(leaf_temperature_celsius, humidity)
-    return SensorData(
-        pressure=pressure,
-        temperature_celsius=temperature_celsius,
-        humidity=humidity,
-        vpd=vpd
-    )
+    print(temperature_celsius, pressure, humidity)
+    """

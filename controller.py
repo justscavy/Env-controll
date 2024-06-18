@@ -36,10 +36,10 @@ atexit.register(cleanup_gpio)
 
 def fan_exhaust2_control(turn_on_fanexhaust2):
     GPIO.output(27, GPIO.HIGH if turn_on_fanexhaust2 else GPIO.LOW)
-    if turn_on_fanexhaust2:
-        shared_state.fanexhaust2 = 0
-    else:
-        shared_state.fanexhaust2 = 1
+    #if turn_on_fanexhaust2:
+    #    shared_state.fanexhaust2_state = 0
+    #else:
+    #    shared_state.fanexhaust2_state = 1
 
 
 def humidifier_control(turn_on_humidifier):
@@ -129,7 +129,7 @@ def condition_control():
                 humidifier_control(True) #humid off
                 humidifier_on = True
                 #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
-            if vpd < 0.70 and not humidifier_on:
+            if vpd < 0.70:
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
                     
@@ -158,10 +158,9 @@ def condition_control():
                 humidifier_control(True) #humid off
                 humidifier_on = True
                 #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
-            if vpd < 0.70 and not humidifier_on:
+            if vpd < 0.70:
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
-                    
             if temperature > 24 and heatmat_on:
                 if debounce_check(lambda: generate_sensor_data().temperature > 24):
                     print("Turning on heatmat")
@@ -172,5 +171,4 @@ def condition_control():
                     print("Turning off heatmat")
                     heatmat_control(True)
                     heatmat_on = True
-
         dt.sleep(1)
