@@ -6,4 +6,5 @@ class SharedState:
     humidifier_state: int = 0
     dehumidifier_state: int = 0
     heatmat_state: int = 0
+    fanexhaust2: int = 0
 shared_state = SharedState()
