@@ -11,16 +11,17 @@ from shared_state import shared_state
 # GPIO 24 - Humidifier
 # GPIO 17 - Dehumidifier
 # GPIO 25 - Heatmat
+# GPIO 27 - Extra exhaustfan2 5v inline to exhaustfan1
 # GPIO 22 - Fan on light
 
 # Initialize GPIOs
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V (in test phase since we only interupt phase (searching for 2pol interupter))
 GPIO.setup(24, GPIO.OUT)  # Humidifier
-GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now 
+GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now (should get heat from lamp)
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier Not used right now
-GPIO.setup(27, GPIO.OUT)  # TODO: Extra exhaustfan2 5v inline to exhaustfan1 (track state)
-GPIO.setup(22, GPIO.OUT)  # TODO:
+GPIO.setup(27, GPIO.OUT)  # TODO: track state
+GPIO.setup(22, GPIO.OUT)  # TODO: track state
 
 
 gpio_lock = threading.Lock()
