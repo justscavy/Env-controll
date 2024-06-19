@@ -11,14 +11,16 @@ from shared_state import shared_state
 # GPIO 24 - Humidifier
 # GPIO 17 - Dehumidifier
 # GPIO 25 - Heatmat
-# Initialize GPIO
+# GPIO 22 - Fan on light
+
+# Initialize GPIOs
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V (in test phase since we only interupt phase (searching for 2pol interupter))
 GPIO.setup(24, GPIO.OUT)  # Humidifier
 GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now 
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier Not used right now
-GPIO.setup(27, GPIO.OUT)  # Extra exhaustfan2 5v inline to exhaustfan1
-#GPIO.setup()
+GPIO.setup(27, GPIO.OUT)  # TODO: Extra exhaustfan2 5v inline to exhaustfan1 (track state)
+GPIO.setup(22, GPIO.OUT)  # TODO:
 
 
 gpio_lock = threading.Lock()
@@ -30,6 +32,7 @@ def cleanup_gpio():
     GPIO.output(17, GPIO.HIGH) #low trigger
     GPIO.output(25, GPIO.HIGH) #low trigger
     GPIO.output(27, GPIO.LOW)  #high trigger
+    GPIO.output(22, GPIO.LOW) #high trigger
     GPIO.cleanup()
 
 # Turn off relays on exit
@@ -42,6 +45,8 @@ def fan_exhaust2_control(turn_on_fanexhaust2):
     #else:
     #    shared_state.fanexhaust2_state = 1
 
+def fan_on_light(turn_on_fan_on_light):
+    GPIO.output(22, GPIO.HIGH if turn_on_fan_on_light else GPIO.LOW)
 
 def humidifier_control(turn_on_humidifier):
     with gpio_lock:
@@ -105,8 +110,9 @@ def debounce_check(condition_func, duration=5, check_interval=1):
 
 def condition_control():
     humidifier_on = False
-    heatmat_on = False
+    heatmat_on = False #TODO doesnt work yet due wrong flags i guess
     fan_exhaust2_on = False
+    fan_on_light_on = False
 
     while True:
         sensor_data = generate_sensor_data()
@@ -133,17 +139,21 @@ def condition_control():
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
 
-            elif vpd > 0.80 and humidifier_on:
+            elif vpd > 0.80:
                 fan_exhaust2_on = False  
                 fan_exhaust2_control(False)
                     
-            if temperature > 24 and heatmat_on:
+            if temperature > 24:
                 if debounce_check(lambda: generate_sensor_data().temperature > 24):
+                    fan_on_light(True)
+                    fan_on_light_on = True
                     print("Turning on heatmat")
                     heatmat_control(False) #TODO:
                     heatmat_on = False
-            elif temperature < 22 and not heatmat_on:
+            elif temperature < 22:
                 if debounce_check(lambda: generate_sensor_data().temperature < 22):
+                    fan_on_light(False)
+                    fan_on_light_on = False
                     print("Turning off heatmat")
                     heatmat_control(True)
                     heatmat_on = True
@@ -165,12 +175,12 @@ def condition_control():
             if vpd < 0.70:
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
-            if temperature > 24 and heatmat_on:
+            if temperature > 24:
                 if debounce_check(lambda: generate_sensor_data().temperature > 24):
                     print("Turning on heatmat")
                     heatmat_control(False) #TODO:
                     heatmat_on = False
-            elif temperature < 22 and not heatmat_on:
+            elif temperature < 22:
                 if debounce_check(lambda: generate_sensor_data().temperature < 22):
                     print("Turning off heatmat")
                     heatmat_control(True)
