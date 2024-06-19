@@ -17,7 +17,8 @@ GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V (in test phase since we only inte
 GPIO.setup(24, GPIO.OUT)  # Humidifier
 GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now 
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier Not used right now
-GPIO.setup(27, GPIO.OUT)  #TODO: Extra exhaustfan2 5v inline to exhaustfan1
+GPIO.setup(27, GPIO.OUT)  # Extra exhaustfan2 5v inline to exhaustfan1
+#GPIO.setup()
 
 
 gpio_lock = threading.Lock()
@@ -122,8 +123,7 @@ def condition_control():
                     print("Turning on humidifier")
                     humidifier_control(False)
                     humidifier_on = False
-                    fan_exhaust2_on = False  
-                    fan_exhaust2_control(False)
+                    
             elif vpd < 0.75 and not humidifier_on:
                 print("Turning off humidifier")
                 humidifier_control(True) #humid off
@@ -132,6 +132,10 @@ def condition_control():
             if vpd < 0.70:
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
+
+            elif vpd > 0.80 and humidifier_on:
+                fan_exhaust2_on = False  
+                fan_exhaust2_control(False)
                     
             if temperature > 24 and heatmat_on:
                 if debounce_check(lambda: generate_sensor_data().temperature > 24):
