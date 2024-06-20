@@ -18,7 +18,7 @@ from shared_state import shared_state
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Light outlet1 230V (in test phase since we only interupt phase (searching for 2pol interupter))
 GPIO.setup(24, GPIO.OUT)  # Humidifier
-GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now (should get heat from lamp)
+GPIO.setup(25, GPIO.OUT)  # TODO: Heatmat for now (should get heat from lamp) (probably wrong flag set from humidifier)
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier Not used right now
 GPIO.setup(27, GPIO.OUT)  # TODO: track state
 GPIO.setup(22, GPIO.OUT)  # TODO: track state
