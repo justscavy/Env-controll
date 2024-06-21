@@ -27,8 +27,8 @@ def generate_sensor_data():
     data = bme280.sample(bus, address, calibration_params)
     
     # Adjust the temperature and humidity (calibrated with govee h5705)
-    adjusted_temperature = data.temperature + 0.5
-    adjusted_humidity = data.humidity + 6
+    adjusted_temperature = data.temperature + 0.5 #still 0.6 less than govee
+    adjusted_humidity = data.humidity + 3
     
     # Ensure humidity stays within the valid range (0-100%)
     if adjusted_humidity > 100:
