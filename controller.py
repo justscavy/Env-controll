@@ -322,11 +322,11 @@ def condition_control():
                 humidifier_control(True) #humid off
                 humidifier_on = True
                 #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
-            #if vpd < 0.95:
+            #if vpd < 0.90:
             #    fan_exhaust2_on = True #fan on
             #    fan_exhaust2_control(True)
 #
-            #elif vpd > 1.0:
+            #elif vpd > 1.6:
             #    fan_exhaust2_on = False  
             #    fan_exhaust2_control(False)
                     
@@ -358,11 +358,11 @@ def condition_control():
                 humidifier_control(True) #humid off
                 humidifier_on = True
                 #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
-            if vpd < 0.95:
+            if vpd < 0.90:
                 fan_exhaust2_on = True #fan on
                 fan_exhaust2_control(True)
 
-            elif vpd > 1.0:
+            elif vpd > 1.6:
                 fan_exhaust2_on = False  
                 fan_exhaust2_control(False)
             #if temperature > 24:
