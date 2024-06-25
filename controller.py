@@ -83,19 +83,19 @@ def turn_off_light():
         GPIO.output(23, GPIO.HIGH)
     shared_state.light_state = 0
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
-'''
-def light_control_veg():
+
+def light_control():
     now = datetime.now().time()
-    turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
-    turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
+    turn_on_time = datetime.strptime("21:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
 
     #check lightstate in case program starts in between times
     if now < turn_on_time and now > turn_off_time:
         turn_off_light()
     else:
         turn_on_light()
-    schedule.every().day.at("20:00:00").do(turn_on_light)
-    schedule.every().day.at("14:00:00").do(turn_off_light)
+    schedule.every().day.at("21:00:00").do(turn_on_light)
+    schedule.every().day.at("09:00:00").do(turn_off_light)
     while True:
         schedule.run_pending()
         dt.sleep(1)
@@ -115,7 +115,7 @@ def light_control_flower():
     while True:
         schedule.run_pending()
         dt.sleep(1)
-
+'''
 def debounce_check(condition_func, duration=5, check_interval=1):
     start_time = datetime.now()
     while (datetime.now() - start_time).total_seconds() < duration:
@@ -209,7 +209,7 @@ def condition_control():
         dt.sleep(1)
         """
 
-
+'''
 #control for early veg - mid veg
 def condition_control():
     humidifier_on = False
@@ -292,7 +292,7 @@ def condition_control():
             #        heatmat_control(True)
             #        heatmat_on = True
         dt.sleep(1)
-
+'''
 
 #early flower 0.8-1.2
 def condition_control():
