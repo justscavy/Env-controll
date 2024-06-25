@@ -83,8 +83,8 @@ def turn_off_light():
         GPIO.output(23, GPIO.HIGH)
     shared_state.light_state = 0
     print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
-
-def light_control():
+'''
+def light_control_veg():
     now = datetime.now().time()
     turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
     turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
@@ -99,7 +99,22 @@ def light_control():
     while True:
         schedule.run_pending()
         dt.sleep(1)
+'''
+def light_control_flower():
+    now = datetime.now().time()
+    turn_on_time = datetime.strptime("21:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
 
+    #check lightstate in case program starts in between times
+    if now < turn_on_time and now > turn_off_time:
+        turn_off_light()
+    else:
+        turn_on_light()
+    schedule.every().day.at("21:00:00").do(turn_on_light)
+    schedule.every().day.at("09:00:00").do(turn_off_light)
+    while True:
+        schedule.run_pending()
+        dt.sleep(1)
 
 def debounce_check(condition_func, duration=5, check_interval=1):
     start_time = datetime.now()
@@ -264,6 +279,90 @@ def condition_control():
                 fan_exhaust2_control(True)
 
             elif vpd > 0.85:
+                fan_exhaust2_on = False  
+                fan_exhaust2_control(False)
+            #if temperature > 24:
+            #    if debounce_check(lambda: generate_sensor_data().temperature > 24):
+            #        print("Turning on heatmat")
+            #        heatmat_control(False) #TODO:
+            #        heatmat_on = False
+            #elif temperature < 22:
+            #    if debounce_check(lambda: generate_sensor_data().temperature < 22):
+            #        print("Turning off heatmat")
+            #        heatmat_control(True)
+            #        heatmat_on = True
+        dt.sleep(1)
+
+
+#early flower 0.8-1.2
+def condition_control():
+    humidifier_on = False
+    heatmat_on = False
+    fan_exhaust2_on = False
+    fan_on_light_on = False
+
+    while True:
+        sensor_data = generate_sensor_data()
+        vpd = sensor_data.vpd
+        temperature = sensor_data.temperature
+        with gpio_lock:
+            light_state = shared_state.light_state
+        # we gotta set flags to opposite since we use low trigger SSRs now
+
+        # LIGHT STATE ON
+        if light_state == 1:
+            if vpd > 1.3 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd > 1.3):
+                    print("Turning on humidifier")
+                    humidifier_control(False)
+                    humidifier_on = False
+                    
+            elif vpd < 1.0 and not humidifier_on:
+                print("Turning off humidifier")
+                humidifier_control(True) #humid off
+                humidifier_on = True
+                #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
+            #if vpd < 0.95:
+            #    fan_exhaust2_on = True #fan on
+            #    fan_exhaust2_control(True)
+#
+            #elif vpd > 1.0:
+            #    fan_exhaust2_on = False  
+            #    fan_exhaust2_control(False)
+                    
+            if temperature > 24:
+                if debounce_check(lambda: generate_sensor_data().temperature > 24):
+                    fan_on_light(True)
+                    fan_on_light_on = True
+                    print("Turning on heatmat")
+                    heatmat_control(False) #TODO:
+                    heatmat_on = False
+            elif temperature < 22:
+                if debounce_check(lambda: generate_sensor_data().temperature < 22):
+                    fan_on_light(False)
+                    fan_on_light_on = False
+                    print("Turning off heatmat")
+                    heatmat_control(True)
+                    heatmat_on = True
+
+        # LIGHT STATE OFF
+        else:
+            if vpd > 1.3 and humidifier_on:
+                if debounce_check(lambda: generate_sensor_data().vpd > 1.3):
+                    print("Turning on humidifier")
+                    humidifier_control(False)
+                    humidifier_on = False
+                
+            elif vpd < 1.0 and not humidifier_on:
+                print("Turning off humidifier")
+                humidifier_control(True) #humid off
+                humidifier_on = True
+                #if debounce_check(lambda: generate_sensor_data().vpd < 0.75):
+            if vpd < 0.95:
+                fan_exhaust2_on = True #fan on
+                fan_exhaust2_control(True)
+
+            elif vpd > 1.0:
                 fan_exhaust2_on = False  
                 fan_exhaust2_control(False)
             #if temperature > 24:
