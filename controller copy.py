@@ -79,16 +79,16 @@ def turn_off_light():
 
 def light_control():
     now = datetime.now().time()
-    turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
-    turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
+    turn_on_time = datetime.strptime("21:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("09:00:00", "%H:%M:%S").time()
 
-    #check lightstate in case program starts in between times
+    #check lightstate in case program starts in between timesS
     if now < turn_on_time and now > turn_off_time:
         turn_off_light()
     else:
         turn_on_light()
-    schedule.every().day.at("20:00:00").do(turn_on_light)
-    schedule.every().day.at("14:00:00").do(turn_off_light)
+    schedule.every().day.at("21:00:00").do(turn_on_light)
+    schedule.every().day.at("09:00:00").do(turn_off_light)
     while True:
         schedule.run_pending()
         dt.sleep(1)
