@@ -35,7 +35,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
     global out_of_range_start_time_temp, out_of_range_start_time_humidity, last_email_sent_time
     current_time = datetime.now()
     # Check temperature
-    if temperature < 19 or temperature > 28:
+    if temperature < 18 or temperature > 30:
         if out_of_range_start_time_temp is None:
             # Start the timer when temperature goes out of range
             out_of_range_start_time_temp = current_time
