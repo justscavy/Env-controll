@@ -3,9 +3,8 @@ from datetime import datetime
 import time
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
-from sensor import SensorData
+from sensor import Sensor, Location, address_box, address_room
 from config_manager import ConfigManager
-from sensor import generate_sensor_data
 from notification_manager import check_conditions, send_email
 from shared_state import shared_state
 
@@ -21,35 +20,50 @@ write_api = client.write_api(write_options=SYNCHRONOUS)
 connection_lost_time = None
 connection_alert_time = 0
 
+# Initialize sensors
+room_sensor = Sensor(address=address_room, location=Location.ROOM)
+box_sensor = Sensor(address=address_box, location=Location.BOX)
+
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sensor_data = generate_sensor_data()
 
-    point = Point("sensor_data").tag("location", "indoor") \
-                                .field("temperature", sensor_data.temperature) \
-                                .field("pressure", sensor_data.pressure) \
-                                .field("humidity", sensor_data.humidity) \
-                                .field("vpd", sensor_data.vpd) 
+    # Fetch data from sensors
+    room_sensor_data = room_sensor.get_data()
+    box_sensor_data = box_sensor.get_data()
+
+    # Create InfluxDB points for room sensor
+    room_point = Point("sensor_data").tag("location", "room") \
+                                      .field("temperature", room_sensor_data.temperature) \
+                                      .field("pressure", room_sensor_data.pressure) \
+                                      .field("humidity", room_sensor_data.humidity) \
+                                      .field("vpd", room_sensor_data.vpd) 
     
+    # Create InfluxDB points for growbox sensor
+    box_point = Point("sensor_data").tag("location", "growbox") \
+                                    .field("temperature", box_sensor_data.temperature) \
+                                    .field("pressure", box_sensor_data.pressure) \
+                                    .field("humidity", box_sensor_data.humidity) \
+                                    .field("vpd", box_sensor_data.vpd) 
+
     state_point = Point("state_data").tag("location", "indoor") \
                                      .field("light_state", shared_state.light_state) \
                                      .field("humidifier_state", shared_state.humidifier_state) \
                                      .field("dehumidifier_state", shared_state.dehumidifier_state) \
                                      .field("heatmat_state", shared_state.heatmat_state)
                                      #.field("fanexhaust2_state", shared_state.fanexhaust2_state)
+
     try:
-        write_api.write(bucket=config_manager.influxdb_config.bucket, record=[point, state_point])
+        write_api.write(bucket=config_manager.influxdb_config.bucket, record=[room_point, box_point, state_point])
         shared_state.last_successful_write = time.time()  # Update the last successful write time
     except Exception as e:
         print(f"Failed to write data to InfluxDB: {e}")
         handle_connection_loss()
 
-    check_conditions(temperature=sensor_data.temperature, 
-                     humidity=sensor_data.humidity, 
-                     vpd=sensor_data.vpd, 
+    # Check conditions and send notifications if needed
+    check_conditions(temperature=room_sensor_data.temperature, 
+                     humidity=room_sensor_data.humidity, 
+                     vpd=room_sensor_data.vpd, 
                      to_email=config_manager.email_config.to_email)
-    
-    
 
 def handle_connection_loss():
     global connection_lost_time
