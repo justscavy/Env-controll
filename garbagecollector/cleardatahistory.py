@@ -1,5 +1,5 @@
-from influxdb_client import InfluxDBClient
-
+#from influxdb_client import InfluxDBClient
+#DELETS ALL UR LOCAL HISTORZ CARE
 # Replace with your InfluxDB details
 url = ""
 token = ""
