@@ -28,7 +28,7 @@ def generate_sensor_data():
     
     # Adjust the temperature and humidity (calibrated with govee h5705)
     adjusted_temperature = data.temperature + 0.5 #still 0.6 less than govee
-    adjusted_humidity = data.humidity + 3
+    adjusted_humidity = data.humidity + 4
     
     # Ensure humidity stays within the valid range (0-100%)
     if adjusted_humidity > 100:

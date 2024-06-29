@@ -10,11 +10,10 @@ client = InfluxDBClient(url=url, token=token, org=org)
 
 delete_api = client.delete_api()
 
-# Define the start and stop time for the delete operation
+
 start = "1970-01-01T00:00:00Z"
 stop = "2024-12-31T23:59:59Z"
 
-# Delete the measurement
 delete_api.delete(start, stop, '_measurement="sensor_data"', bucket=bucket, org=org)
 
 client.close()
