@@ -3,24 +3,17 @@ import RPi.GPIO as GPIO
 import time
 import sys
 
-def cleanAndExit():
-    print("Cleaning...")
-    GPIO.cleanup()
-    print("Bye!")
-    sys.exit()
+from hx711 import HX711
 
-hx = HX711(5, 6)
-
-hx.set_reference_unit(1)  # Use set_reference_unit
-hx.reset()
-hx.tare()
-
-while True:
-    try:
-        val = hx.get_weight(5)
-        print(val)
-        hx.power_down()
-        hx.power_up()
-        time.sleep(0.1)
-    except (KeyboardInterrupt, SystemExit):
-        cleanAndExit()
+try:
+    hx711 = HX711(
+        dout_pin=5,
+        pd_sck_pin=6,
+        channel='A',
+        gain=64
+    )
+    hx711.reset()   # Before we start, reset the HX711 (not obligate)
+    measures = hx711.get_raw_data(num_measures=3)
+finally:
+    GPIO.cleanup()  # always do a GPIO cleanup in your scripts!
+print("\n".join(measures))

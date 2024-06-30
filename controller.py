@@ -53,6 +53,18 @@ def humidifier_control(turn_on_humidifier):
     shared_state.humidifier_state = 0 if turn_on_humidifier else 1
     print(f"Humidifier {'on' if turn_on_humidifier else 'off'}. State: {shared_state.humidifier_state}")
 
+
+def dehumidifier_control(turn_on_dehumidifier):
+    with gpio_lock:
+        GPIO.output(17, GPIO.HIGH if turn_on_dehumidifier else GPIO.LOW)
+    if turn_on_dehumidifier:
+        shared_state.dehumidifier_state = 0
+        print(f"dehumidifier is on. {shared_state.dehumidifier_state}")
+    else:
+        shared_state.dehumidifier_state = 1
+        print(f"dehumidifier is off. {shared_state.dehumidifier_state}")
+
+
 def heatmat_control(turn_on_heatmat):
     with gpio_lock:
         GPIO.output(25, GPIO.LOW if turn_on_heatmat else GPIO.HIGH)
@@ -99,6 +111,7 @@ def debounce_check(condition_func, duration=5, check_interval=1):
 def condition_control():
     humidifier_on = False
     heatmat_on = False
+    dehumidifier_on = False
     fan_exhaust2_on = False
     fan_on_light_on = False
 
@@ -114,46 +127,57 @@ def condition_control():
             light_state = shared_state.light_state
 
         if light_state == 1:
-            if room_vpd > 1.3 and humidifier_on:
-                if debounce_check(lambda: room_sensor.get_data().vpd > 1.3):
+            if box_vpd > 1.3 and humidifier_on:
+                if debounce_check(lambda: box_sensor.get_data().vpd > 1.3):
                     print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
-            elif room_vpd < 1.0 and not humidifier_on:
+            elif box_vpd < 1.0 and not humidifier_on:
                 print("Turning on humidifier")
                 humidifier_control(True)
                 humidifier_on = True
-
-            if room_temp > 24:
-                if debounce_check(lambda: room_sensor.get_data().temperature > 24):
+            if box_temp > 24:
+                if debounce_check(lambda: box_sensor.get_data().temperature > 24):
                     fan_on_light(True)
                     fan_on_light_on = True
                     print("Turning off heatmat")
                     heatmat_control(False)
                     heatmat_on = False
-            elif room_temp < 22:
-                if debounce_check(lambda: room_sensor.get_data().temperature < 22):
+            elif box_temp < 22:
+                if debounce_check(lambda: box_sensor.get_data().temperature < 22):
                     fan_on_light(False)
                     fan_on_light_on = False
                     print("Turning on heatmat")
                     heatmat_control(True)
                     heatmat_on = True
+            if box_vpd > 1.2:
+                dehumidifier_control(True)
+                dehumidifier_on = True
+            elif box_vpd < 1.0:
+                dehumidifier_control(False)
+                dehumidifier_on = False
+                
         else:
-            if room_vpd > 1.3 and humidifier_on:
-                if debounce_check(lambda: room_sensor.get_data().vpd > 1.3):
+            if box_vpd > 1.2 and humidifier_on:
+                if debounce_check(lambda: box_sensor.get_data().vpd > 1.2):
                     print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
-            elif room_vpd < 1.0 and not humidifier_on:
+            elif box_vpd < 1.0 and not humidifier_on:
                 print("Turning on humidifier")
                 humidifier_control(True)
                 humidifier_on = True
-
-            if room_vpd < 0.90:
-                fan_exhaust2_on = True
-                fan_exhaust2_control(True)
-            elif room_vpd > 1.6:
-                fan_exhaust2_on = False
-                fan_exhaust2_control(False)
+            if box_vpd > 1.2:
+                dehumidifier_control(True)
+                dehumidifier_on = True
+            elif box_vpd < 1.0:
+                dehumidifier_control(False)
+                dehumidifier_on = False
+            #if room_vpd < 0.90:
+            #    fan_exhaust2_on = True
+            #    fan_exhaust2_control(True)
+            #elif room_vpd > 1.6:
+            #    fan_exhaust2_on = False
+            #    fan_exhaust2_control(False)
 
         dt.sleep(1)
