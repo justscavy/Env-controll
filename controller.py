@@ -150,27 +150,27 @@ def condition_control():
                     print("Turning on heatmat")
                     heatmat_control(True)
                     heatmat_on = True
-            if box_vpd > 1.2:
+            if box_vpd > 1.25:
                 dehumidifier_control(True)
                 dehumidifier_on = True
-            elif box_vpd < 1.0:
+            elif box_vpd < 1.15:
                 dehumidifier_control(False)
                 dehumidifier_on = False
                 
         else:
-            if box_vpd > 1.2 and humidifier_on:
-                if debounce_check(lambda: box_sensor.get_data().vpd > 1.2):
+            if box_vpd > 1.25 and humidifier_on:
+                if debounce_check(lambda: box_sensor.get_data().vpd > 1.25):
                     print("Turning off humidifier")
                     humidifier_control(False)
                     humidifier_on = False
-            elif box_vpd < 1.0 and not humidifier_on:
+            elif box_vpd < 1.15 and not humidifier_on:
                 print("Turning on humidifier")
                 humidifier_control(True)
                 humidifier_on = True
-            if box_vpd > 1.2:
+            if box_vpd > 1.25:
                 dehumidifier_control(True)
                 dehumidifier_on = True
-            elif box_vpd < 1.0:
+            elif box_vpd < 1.15:
                 dehumidifier_control(False)
                 dehumidifier_on = False
             #if room_vpd < 0.90:
