@@ -1,0 +1,9 @@
+notification_manager reads data from in and outside -> only notifz from inside values
+track state of exhaust fan etc
+rename room to outside bme280 sensor
+get rid of print?
+backup?
+timelapse while light is on?
+create wage
+set requirements.
+set flags confusion right

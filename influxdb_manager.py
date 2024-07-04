@@ -20,25 +20,25 @@ write_api = client.write_api(write_options=SYNCHRONOUS)
 connection_lost_time = None
 connection_alert_time = 0
 
-# Initialize sensors
+
 room_sensor = Sensor(address=address_room, location=Location.ROOM)
 box_sensor = Sensor(address=address_box, location=Location.BOX)
 
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Fetch data from sensors
+    #fetch data from sensors
     room_sensor_data = room_sensor.get_data()
     box_sensor_data = box_sensor.get_data()
 
-    # Create InfluxDB points for room sensor
-    room_point = Point("sensor_data").tag("location", "room") \
+   
+    room_point = Point("sensor_data").tag("location", "outside") \
                                       .field("temperature", room_sensor_data.temperature) \
                                       .field("pressure", room_sensor_data.pressure) \
                                       .field("humidity", room_sensor_data.humidity) \
                                       .field("vpd", room_sensor_data.vpd) 
     
-    # Create InfluxDB points for growbox sensor
+ 
     box_point = Point("sensor_data").tag("location", "growbox") \
                                     .field("temperature", box_sensor_data.temperature) \
                                     .field("pressure", box_sensor_data.pressure) \
