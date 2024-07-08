@@ -7,6 +7,7 @@ from sensor import Sensor, Location, address_box, address_room
 from config_manager import ConfigManager
 from notification_manager import check_conditions, send_email
 from shared_state import shared_state
+#from hx711py.example import initialize_hx711, wage
 
 # Init auth config
 config_manager = ConfigManager("config/config.json")
@@ -20,25 +21,28 @@ write_api = client.write_api(write_options=SYNCHRONOUS)
 connection_lost_time = None
 connection_alert_time = 0
 
-
 room_sensor = Sensor(address=address_room, location=Location.ROOM)
 box_sensor = Sensor(address=address_box, location=Location.BOX)
+
+# Initialize the HX711
+#hx = initialize_hx711()
 
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    #fetch data from sensors
+    # Fetch data from sensors
     room_sensor_data = room_sensor.get_data()
     box_sensor_data = box_sensor.get_data()
 
-   
+    # Fetch weight data
+   # val_A, val_B = wage(hx)
+
     room_point = Point("sensor_data").tag("location", "outside") \
                                       .field("temperature", room_sensor_data.temperature) \
                                       .field("pressure", room_sensor_data.pressure) \
                                       .field("humidity", room_sensor_data.humidity) \
                                       .field("vpd", room_sensor_data.vpd) 
-    
- 
+
     box_point = Point("sensor_data").tag("location", "growbox") \
                                     .field("temperature", box_sensor_data.temperature) \
                                     .field("pressure", box_sensor_data.pressure) \
@@ -50,7 +54,10 @@ def write_to_influxdb() -> None:
                                      .field("humidifier_state", shared_state.humidifier_state) \
                                      .field("dehumidifier_state", shared_state.dehumidifier_state) \
                                      .field("heatmat_state", shared_state.heatmat_state)
-                                     #.field("fanexhaust2_state", shared_state.fanexhaust2_state)
+    
+    #wage_point = Point("wage_data").tag("location", "wage") \
+    #                               .field("Wage1", val_A) \
+    #                               .field("Wage2", val_B)
 
     try:
         write_api.write(bucket=config_manager.influxdb_config.bucket, record=[room_point, box_point, state_point])
