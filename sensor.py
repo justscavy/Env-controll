@@ -22,7 +22,7 @@ class Location(Enum):
 
 @dataclass
 class Sensor:
-    address: int  # 'hex' is not a valid type, should be 'int'
+    address: int 
     location: Location
 
     def get_data(self) -> SensorData:
