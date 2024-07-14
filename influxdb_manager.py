@@ -7,7 +7,7 @@ from sensor import Sensor, Location, address_box, address_room
 from config_manager import ConfigManager
 from notification_manager import check_conditions, send_email
 from shared_state import shared_state
-#from hx711py.example import initialize_hx711, wage
+from wage import wage, initialize_hx711
 
 # Init auth config
 config_manager = ConfigManager("config/config.json")
@@ -25,7 +25,7 @@ room_sensor = Sensor(address=address_room, location=Location.ROOM)
 box_sensor = Sensor(address=address_box, location=Location.BOX)
 
 # Initialize the HX711
-#hx = initialize_hx711()
+hx = initialize_hx711()
 
 def write_to_influxdb() -> None:
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -35,7 +35,7 @@ def write_to_influxdb() -> None:
     box_sensor_data = box_sensor.get_data()
 
     # Fetch weight data
-   # val_A, val_B = wage(hx)
+    val_A, val_B = wage(hx)
 
     room_point = Point("sensor_data").tag("location", "outside") \
                                       .field("temperature", room_sensor_data.temperature) \
@@ -55,12 +55,12 @@ def write_to_influxdb() -> None:
                                      .field("dehumidifier_state", shared_state.dehumidifier_state) \
                                      .field("heatmat_state", shared_state.heatmat_state)
     
-    #wage_point = Point("wage_data").tag("location", "wage") \
-    #                               .field("Wage1", val_A) \
-    #                               .field("Wage2", val_B)
+    wage_point = Point("wage_data").tag("location", "wage") \
+                                   .field("Wage1", val_A) \
+                                   .field("Wage2", val_B)
 
     try:
-        write_api.write(bucket=config_manager.influxdb_config.bucket, record=[room_point, box_point, state_point])
+        write_api.write(bucket=config_manager.influxdb_config.bucket, record=[room_point, box_point, state_point, wage_point])
         shared_state.last_successful_write = time.time()  # Update the last successful write time
     except Exception as e:
         print(f"Failed to write data to InfluxDB: {e}")
