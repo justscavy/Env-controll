@@ -42,13 +42,22 @@ class Sensor:
             adjusted_humidity = 100
         elif adjusted_humidity < 0:
             adjusted_humidity = 0
+        
+                # VPD calculation (in kPa)
+        vpd_temperature = adjusted_temperature - 2
+        saturation_vapor_pressure = 0.611 * exp((17.27 * vpd_temperature) / (vpd_temperature + 237.3))
+        actual_vapor_pressure = (adjusted_humidity / 100) * saturation_vapor_pressure
+        vpd = saturation_vapor_pressure - actual_vapor_pressure
 
+        return SensorData(temperature=adjusted_temperature, pressure=data.pressure, humidity=adjusted_humidity, vpd=vpd)
+"""
         # VPD calculation (in kPa)
         saturation_vapor_pressure = 0.611 * exp((17.27 * adjusted_temperature) / (adjusted_temperature + 237.3))
         actual_vapor_pressure = (adjusted_humidity / 100) * saturation_vapor_pressure
         vpd = saturation_vapor_pressure - actual_vapor_pressure
 
         return SensorData(temperature=adjusted_temperature, pressure=data.pressure, humidity=adjusted_humidity, vpd=vpd)
+    """
 
 # Function to load calibration parameters
 def load_calibration_params():
