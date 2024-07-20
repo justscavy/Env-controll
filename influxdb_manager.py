@@ -67,9 +67,9 @@ def write_to_influxdb() -> None:
         handle_connection_loss()
 
     # Check conditions and send notifications if needed
-    check_conditions(temperature=room_sensor_data.temperature, 
-                     humidity=room_sensor_data.humidity, 
-                     vpd=room_sensor_data.vpd, 
+    check_conditions(temperature=box_sensor_data.temperature, 
+                     humidity=box_sensor_data.humidity, 
+                     vpd=box_sensor_data.vpd, 
                      to_email=config_manager.email_config.to_email)
 
 def handle_connection_loss():
