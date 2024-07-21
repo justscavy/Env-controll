@@ -2,8 +2,12 @@ from datetime import datetime, timedelta
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 from config_manager import ConfigManager
+import smbus2
+import bme280
+import math
+import time as dt
+
 
 config_manager = ConfigManager("config/config.json")
 to_email = config_manager.email_config.to_email
@@ -75,3 +79,38 @@ def restart_notification():
     subject = "Raspberry Restart"
     body = "Log entry todo"
     send_email(subject, body, to_email)
+
+
+def scan_i2c_bus(bus):
+    print("Scanning I2C bus...")
+    devices = []
+    for address in range(128):
+        try:
+            bus.read_byte(address)
+            devices.append(hex(address))
+        except OSError:
+            pass
+    return devices
+
+# Initialize I2C bus
+i2c_bus = smbus2.SMBus(1)
+
+def found_sensors():
+    while True:
+        devices = scan_i2c_bus(i2c_bus)
+        if devices:
+            print("Found I2C devices with addresses:", devices)
+        elif devices <2:
+            subject = "Sensor disconnected"
+            body = "Sensor lost connection"
+            send_email(subject, body, to_email)
+        #loop through sensor to see if thez work
+        for device in devices:
+            if device in ['0x76', '0x77']:
+                print(f"Initializing BME280 sensor at address {device}")
+                address = int(device, 16)
+                #load param.
+                bme280.load_calibration_params(i2c_bus, address)
+                data = bme280.sample(i2c_bus, address)
+                dt.sleep(10)
+
