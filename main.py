@@ -13,7 +13,8 @@ from wage import wage, initialize_hx711
 if __name__ == "__main__":
     hx = initialize_hx711()
     
-    #found_sensors()
+    sensor_thread = threading.Thread(target=found_sensors)
+    sensor_thread.start()
     
     restart_notification()
     light_thread = threading.Thread(target=light_control)

@@ -1,6 +1,8 @@
 import smbus2
 import bme280
 import math
+import time as dt
+
 
 def scan_i2c_bus(bus):
     print("Scanning I2C bus...")
@@ -39,5 +41,7 @@ def found_sensors():
             data = bme280.sample(i2c_bus, address)
             print(f"Temperature: {data.temperature:.2f} °C, Pressure: {data.pressure:.2f} hPa, Humidity: {data.humidity:.2f} %")
 
+while True:
 
-found_sensors()
+    found_sensors()
+    dt.sleep(2)

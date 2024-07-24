@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stromkostenrechner</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+        label, input, button {
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Stromkostenrechner</h1>
+    <label for="price">Strompreis (pro kWh in Euro):</label>
+    <input type="number" id="price" step="0.01" min="0">
+
+    <label for="duration">Dauer (in Stunden):</label>
+    <input type="number" id="duration" step="0.1" min="0">
+
+    <button onclick="calculateCost()">Kosten berechnen</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    function calculateCost() {
+        const price = parseFloat(document.getElementById('price').value);
+        const duration = parseFloat(document.getElementById('duration').value);
+        const resultDiv = document.getElementById('result');
+
+        if (isNaN(price) || isNaN(duration)) {
+            resultDiv.textContent = 'Bitte geben Sie gültige Zahlen ein.';
+            return;
+        }
+
+        const cost = price * duration;
+        resultDiv.textContent = `Die Gesamtkosten betragen: ${cost.toFixed(2)} Euro.`;
+    }
+</script>
+
+</body>
+</html>
