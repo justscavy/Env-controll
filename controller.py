@@ -16,6 +16,7 @@ GPIO.setup(25, GPIO.OUT)  # Heatmat 230V
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
+GPIO.setup(26, GPIO.OUT)  # anzucht
 
 # High since we work with a low trigger SSR
 def cleanup_gpio():
@@ -25,6 +26,7 @@ def cleanup_gpio():
     GPIO.output(25, GPIO.HIGH)  # low trigger
     GPIO.output(27, GPIO.LOW)   # high trigger
     GPIO.output(22, GPIO.LOW)   # high trigger
+    GPIO.output(26, GPIO.HIGH)
     GPIO.cleanup()
 
 # Turn off relays on exit
@@ -85,6 +87,33 @@ def light_control():
         turn_on_light()
     schedule.every().day.at("20:00:00").do(turn_on_light)
     schedule.every().day.at("08:00:00").do(turn_off_light)
+    while True:
+        schedule.run_pending()
+        dt.sleep(1)
+
+def turn_on_light_anzucht():
+    with gpio_lock:
+        GPIO.output(26, GPIO.LOW)
+    light_state_anzucht = 1
+    #print(f"Light turned on at {datetime.now()} with state {shared_state.light_state_anzucht}")
+
+def turn_off_light_anzucht():
+    with gpio_lock:
+        GPIO.output(26, GPIO.HIGH)
+    light_state_anzucht = 0
+   # print(f"Light turned off at {datetime.now()} with state {shared_state.light_state_anzucht}")
+
+def light_control_anzucht():
+    now = datetime.now().time()
+    turn_on_time_anzucht = datetime.strptime("14:00:00", "%H:%M:%S").time()
+    turn_off_time_anzucht = datetime.strptime("10:00:00", "%H:%M:%S").time()
+
+    if turn_off_time_anzucht < now < turn_on_time_anzucht:
+        turn_off_light()
+    else:
+        turn_on_light()
+    schedule.every().day.at("14:00:00").do(turn_on_light)
+    schedule.every().day.at("10:00:00").do(turn_off_light)
     while True:
         schedule.run_pending()
         dt.sleep(1)

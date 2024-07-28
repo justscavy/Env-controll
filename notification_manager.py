@@ -96,21 +96,31 @@ def scan_i2c_bus(bus):
 i2c_bus = smbus2.SMBus(1)
 
 def found_sensors():
+    global last_email_sent_time
     while True:
         devices = scan_i2c_bus(i2c_bus)
-        if devices:
-            print("Found I2C devices with addresses:", devices)
+        print("Found I2C devices with addresses:", devices)
+        
         if len(devices) < 2:
-            subject = "Sensor disconnected"
-            body = "Sensor lost connection"
-            send_email(subject, body, to_email)
-        # Loop through sensor to see if they work
-        for device in devices:
-            if device in ['0x76', '0x77']:
-                print(f"Initializing BME280 sensor at address {device}")
-                address = int(device, 16)
-                # Load param
-                bme280.load_calibration_params(i2c_bus, address)
-                data = bme280.sample(i2c_bus, address)
-                dt.sleep(5)
+            current_time = datetime.now()
+            if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
+                subject = "Sensor disconnected"
+                body = "Sensor lost connection. Found sensors: " + ", ".join(devices)
+                send_email(subject, body, to_email)
+                last_email_sent_time = current_time
+        else:
+            # Loop through sensors to see if they work
+            for device in devices:
+                if device in ['0x76', '0x77']:
+                    print(f"Initializing BME280 sensor at address {device}")
+                    address = int(device, 16)
+                    try:
+                        # Load calibration params and read data
+                        bme280.load_calibration_params(i2c_bus, address)
+                        data = bme280.sample(i2c_bus, address)
+                        print(f"Sensor data: {data}")
+                    except Exception as e:
+                        print(f"Failed to initialize or read from sensor at address {device}: {e}")
+        # Sleep for a few seconds before the next scan
+        dt.sleep(5)
 

@@ -66,13 +66,4 @@ def load_calibration_params():
 # Load calibration parameters
 calibration_params = load_calibration_params()
 
-# Initialize sensors
-room_sensor = Sensor(address=address_room, location=Location.ROOM)
-box_sensor = Sensor(address=address_box, location=Location.BOX)
 
-# Example usage
-room_data = room_sensor.get_data()
-box_data = box_sensor.get_data()
-
-print(f"Room Sensor Data: {room_data}")
-print(f"Box Sensor Data: {box_data}")

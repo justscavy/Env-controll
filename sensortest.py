@@ -40,8 +40,8 @@ def found_sensors():
             bme280.load_calibration_params(i2c_bus, address)
             data = bme280.sample(i2c_bus, address)
             print(f"Temperature: {data.temperature:.2f} °C, Pressure: {data.pressure:.2f} hPa, Humidity: {data.humidity:.2f} %")
+found_sensors()
 
-while True:
 
-    found_sensors()
-    dt.sleep(2)
+
+
