@@ -30,13 +30,14 @@ def send_email(subject, body, to_email):
 # Track out-of-range time and last email sent time
 out_of_range_start_time_temp = None
 out_of_range_start_time_humidity = None
+out_of_range_start_time_vpd = None
 last_email_sent_time = None
 email_cooldown = timedelta(minutes=5)  # Set time between sending alerts
 
 # The idea is to first let the program try to handle the environment before taking actions.
 # After <5mins> give out notifications
 def check_conditions(temperature, humidity, vpd, to_email):
-    global out_of_range_start_time_temp, out_of_range_start_time_humidity, last_email_sent_time
+    global out_of_range_start_time_temp, out_of_range_start_time_humidity, out_of_range_start_time_vpd, last_email_sent_time
     current_time = datetime.now()
     # Check temperature
     if temperature < 18 or temperature > 30:
@@ -57,7 +58,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
         # Reset timer if temperature goes back in range
         out_of_range_start_time_temp = None
 
-    if humidity < 30 or humidity > 90:
+    if humidity < 50 or humidity > 65:
         if out_of_range_start_time_humidity is None:
             # Start the timer when humidity goes out of range
             out_of_range_start_time_humidity = current_time
@@ -74,6 +75,24 @@ def check_conditions(temperature, humidity, vpd, to_email):
     else:
         # Reset the timer if humidity goes back in range
         out_of_range_start_time_humidity = None
+    
+    if vpd < 1.00 or vpd > 1.30:
+        if out_of_range_start_time_vpd is None:
+            # Start the timer when humidity goes out of range
+            out_of_range_start_time_vpd = current_time
+        elif current_time - out_of_range_start_time_vpd > timedelta(minutes=1):  # Set to 5
+            # Check if enough time has passed since the last email
+            if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
+                # Humidity has been out of range for more than 1 minute
+                subject = "Vpd Alert"
+                body = f"The current vpd is {vpd:.2f} %.\nThe current temperature is {temperature:.2f} °C.\nThe current humidity is {humidity:.2f} kPa."
+                send_email(subject, body, to_email)
+                # Reset the timer after sending the email and set the last email sent time
+                out_of_range_start_time_vpd = None
+                last_email_sent_time = current_time
+    else:
+        # Reset the timer if humidity goes back in range
+        out_of_range_start_time_vpd = None
 
 def restart_notification():
     subject = "Raspberry Restart"
