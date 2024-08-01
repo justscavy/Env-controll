@@ -109,9 +109,9 @@ def light_control_anzucht():
     turn_off_time_anzucht = datetime.strptime("10:00:00", "%H:%M:%S").time()
 
     if turn_off_time_anzucht < now < turn_on_time_anzucht:
-        turn_off_light()
+        turn_off_light_anzucht()
     else:
-        turn_on_light()
+        turn_on_light_anzucht()
     schedule.every().day.at("14:00:00").do(turn_on_light)
     schedule.every().day.at("10:00:00").do(turn_off_light)
     while True:
