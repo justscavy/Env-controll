@@ -2,21 +2,21 @@ import RPi.GPIO as GPIO
 import threading
 import schedule
 import time as dt
-from datetime import datetime
+from datetime import datetime, timedelta
 from sensor import Sensor, Location, address_box, address_room
 import atexit
 from shared_state import shared_state
-
+import json
 
 # Initialize GPIOs
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Main Light 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier 230V
 GPIO.setup(25, GPIO.OUT)  # Heatmat 230V
-GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V
+GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V channel a outlet
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
-GPIO.setup(26, GPIO.OUT)  # anzucht
+GPIO.setup(26, GPIO.OUT)  # anzucht channel b outlet
 
 # High since we work with a low trigger SSR
 def cleanup_gpio():
@@ -90,33 +90,45 @@ def light_control():
     while True:
         schedule.run_pending()
         dt.sleep(1)
+'''
+last_watering_file = 'last_watering.json'
 
-def turn_on_light_anzucht():
-    with gpio_lock:
-        GPIO.output(26, GPIO.LOW)
-    light_state_anzucht = 1
-    #print(f"Light turned on at {datetime.now()} with state {shared_state.light_state_anzucht}")
+def get_last_watering():
+    try:
+        with open(last_watering_file, 'r') as file:
+            data = json.load(file)
+            return datetime.strptime(data['last_watering'], '%Y-%m-%d %H:%M:%S')
+    except (FileNotFoundError, KeyError):
+        return datetime.now() - timedelta(days=2)
 
-def turn_off_light_anzucht():
-    with gpio_lock:
-        GPIO.output(26, GPIO.HIGH)
-    light_state_anzucht = 0
-   # print(f"Light turned off at {datetime.now()} with state {shared_state.light_state_anzucht}")
+def update_last_watering():
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    with open(last_watering_file, 'w') as file:
+        json.dump({'last_watering': now}, file)
 
-def light_control_anzucht():
-    now = datetime.now().time()
-    turn_on_time_anzucht = datetime.strptime("14:00:00", "%H:%M:%S").time()
-    turn_off_time_anzucht = datetime.strptime("10:00:00", "%H:%M:%S").time()
+def run_water_pump(seconds):
+    GPIO.output(26, GPIO.HIGH)
+    dt.sleep(seconds)
+    GPIO.output(26, GPIO.LOW)
 
-    if turn_off_time_anzucht < now < turn_on_time_anzucht:
-        turn_off_light_anzucht()
-    else:
-        turn_on_light_anzucht()
-    schedule.every().day.at("14:00:00").do(turn_on_light)
-    schedule.every().day.at("10:00:00").do(turn_off_light)
+def run_watering_cycle():
+    now = datetime.now()
+    last_watering = get_last_watering()
+
+    if (now - last_watering).days >= 2:
+        run_water_pump(10)
+        dt.sleep(300)  # Pause for 5 minutes
+        run_water_pump(10)
+        dt.sleep(300)  # Pause for 5 minutes
+        run_water_pump(30)
+        update_last_watering()
+
+def watering_schedule():
+    schedule.every().day.at("20:15").do(run_watering_cycle)
     while True:
         schedule.run_pending()
         dt.sleep(1)
+'''
 
 def debounce_check(condition_func, duration=5, check_interval=1):
     start_time = datetime.now()
