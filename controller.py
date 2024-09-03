@@ -17,6 +17,8 @@ GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V channel a outlet
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
 GPIO.setup(26, GPIO.OUT)  # anzucht channel b outlet
+GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+GPIO.setup(20, GPIO.OUT)
 
 # High since we work with a low trigger SSR
 def cleanup_gpio():
@@ -26,7 +28,9 @@ def cleanup_gpio():
     GPIO.output(25, GPIO.HIGH)  # low trigger
     GPIO.output(27, GPIO.LOW)   # high trigger
     GPIO.output(22, GPIO.LOW)   # high trigger
-    GPIO.output(26, GPIO.HIGH)
+    GPIO.output(26, GPIO.HIGH)  # low trigger
+    GPIO.output(20, GPIO.LOW)   # high trigger
+    GPIO.output(21, GPIO.HIGH)   # low trigger
     GPIO.cleanup()
 
 # Turn off relays on exit
@@ -39,42 +43,46 @@ box_sensor = Sensor(address=address_box, location=Location.BOX)
 def fan_exhaust2_control(trigger_fanexhaust2):
     GPIO.output(27, GPIO.HIGH if trigger_fanexhaust2 else GPIO.LOW)
 
+
 def fan_on_light(trigger_fan_on_light):
     GPIO.output(22, GPIO.HIGH if trigger_fan_on_light else GPIO.LOW)
 
+def fan_on_light_control_loop():
+    while True:
+        with gpio_lock:
+             fan_on_light(True)
+             dt.sleep(60)
+             fan_on_light(False)
+             dt.sleep(60)
+
+    
 def humidifier_control(trigger_humidifier):
     with gpio_lock:
         GPIO.output(24, GPIO.HIGH if trigger_humidifier else GPIO.LOW)
     shared_state.humidifier_state = 0 if trigger_humidifier else 1
-    print(f"Humidifier {'off' if trigger_humidifier else 'on'}. State: {shared_state.humidifier_state}")
 
 def dehumidifier_control(trigger_dehumidifier):
     with gpio_lock:
         GPIO.output(17, GPIO.HIGH if trigger_dehumidifier else GPIO.LOW)
     if trigger_dehumidifier:
         shared_state.dehumidifier_state = 0
-        print(f"dehumidifier is off. {shared_state.dehumidifier_state}")
     else:
         shared_state.dehumidifier_state = 1
-        print(f"dehumidifier is on. {shared_state.dehumidifier_state}")
 
 def heatmat_control(trigger_heatmat):
     with gpio_lock:
         GPIO.output(25, GPIO.LOW if trigger_heatmat else GPIO.HIGH)
     shared_state.heatmat_state = 1 if trigger_heatmat else 0
-    print(f"Heatmat {'on' if trigger_heatmat else 'off'}. State: {shared_state.heatmat_state}")
 
 def turn_on_light():
     with gpio_lock:
         GPIO.output(23, GPIO.LOW)
     shared_state.light_state = 1
-    print(f"Light turned on at {datetime.now()} with state {shared_state.light_state}")
 
 def turn_off_light():
     with gpio_lock:
         GPIO.output(23, GPIO.HIGH)
     shared_state.light_state = 0
-    print(f"Light turned off at {datetime.now()} with state {shared_state.light_state}")
 
 def light_control():
     now = datetime.now().time()
@@ -90,6 +98,17 @@ def light_control():
     while True:
         schedule.run_pending()
         dt.sleep(1)
+
+
+def check_water_sensor():
+    GPIO.output(20, GPIO.HIGH)
+    if GPIO.input(21) == GPIO.HIGH:
+        shared_state.water_detected_state = 1
+        return True
+    else:
+        shared_state.water_detected_state = 0
+        return False
+
 '''
 last_watering_file = 'last_watering.json'
 
@@ -143,45 +162,76 @@ def condition_control():
     heatmat_on = False
     dehumidifier_on = False
     fan_exhaust2_on = False
-    fan_on_light_on = False
+    #fan_on_light_on = False
 
+    last_humidifier_on_time = datetime.now() - timedelta(minutes=3)
+    
     while True:
+        water_present = check_water_sensor()
+        if water_present:
+            fan_exhaust2_control(True) 
+        else:
+            fan_exhaust2_control(False) 
+
+            
+        now = datetime.now()
+        current_minute = now.minute
+        is_even_minute = current_minute % 2 == 0
         box_data = box_sensor.get_data()
         box_vpd = box_data.vpd
-
         with gpio_lock:
             light_state = shared_state.light_state
 
-        # VPD Control Logic
         if light_state == 1:
-            if box_vpd > shared_state.max_vpd and humidifier_on: # Turn humidifier off
-                if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
-                    print("Turning off humidifier")
-                    humidifier_control(False)
-                    humidifier_on = False 
-            elif box_vpd < shared_state.min_vpd and not humidifier_on: # Turn humidifier on
-                print("Turning on humidifier")
+        # Calculate the time difference since the last humidifier activation
+            time_since_last_on = now - last_humidifier_on_time
+
+            if time_since_last_on >= timedelta(minutes=3):
+                # Turn on the humidifier
                 humidifier_control(True)
                 humidifier_on = True
+                last_humidifier_on_time = now  # Update the last on time
 
-            if box_vpd > shared_state.max_vpd: # Turn dehumidifier on
+                # Keep the humidifier on for 15 seconds
+                dt.sleep(15)
+
+                # Turn off the humidifier
+                humidifier_control(False)
+                humidifier_on = False
+            '''
+            if box_vpd > shared_state.max_vpd and humidifier_on: #turn humidifier off
+                if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
+                    humidifier_control(False) #should be False
+                    humidifier_on = False    #should be False
+            elif box_vpd < shared_state.min_vpd and not humidifier_on: #turn humidifier on
+                humidifier_control(True)
+                humidifier_on = True
+'''
+    
+            if box_vpd > shared_state.max_vpd: #turn dehumidifier on
                 dehumidifier_control(True)
                 dehumidifier_on = True
-            elif box_vpd < shared_state.min_vpd: # Turn dehumidifier off
+            elif box_vpd < shared_state.min_vpd: #turn dehumidifier off
                 dehumidifier_control(False)
                 dehumidifier_on = False
                 
         else:
+            if is_even_minute:
+                humidifier_control(True)  # Turn on the humidifier during even minutes
+                humidifier_on = True
+            else:
+                humidifier_control(False)  # Turn off the humidifier during odd minutes
+                humidifier_on = False
+          
+            '''
             if box_vpd > shared_state.max_vpd and humidifier_on:
                 if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
-                    print("Turning off humidifier")
-                    humidifier_control(False)
-                    humidifier_on = False
+                    humidifier_control(True) #should be False, True for now 
+                    humidifier_on = True #should be False
             elif box_vpd < shared_state.min_vpd and not humidifier_on:
-                print("Turning on humidifier")
                 humidifier_control(True)
                 humidifier_on = True
-
+'''
             if box_vpd > shared_state.max_vpd:
                 dehumidifier_control(True)
                 dehumidifier_on = True

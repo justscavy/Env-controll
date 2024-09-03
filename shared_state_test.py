@@ -21,6 +21,7 @@ class SharedState:
     humidifier_state: bool = False
     heatmat_state: bool = False
     dehumidifier_state: bool = False
+    water_detected_state: bool = False
 
 shared_state = SharedState()
 
