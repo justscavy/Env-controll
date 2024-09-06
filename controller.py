@@ -7,6 +7,8 @@ from sensor import Sensor, Location, address_box, address_room
 import atexit
 from shared_state import shared_state
 import json
+import logging
+import os
 
 # Initialize GPIOs
 GPIO.setmode(GPIO.BCM)
@@ -16,7 +18,7 @@ GPIO.setup(25, GPIO.OUT)  # Heatmat 230V
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V channel a outlet
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
-GPIO.setup(26, GPIO.OUT)  # anzucht channel b outlet
+GPIO.setup(26, GPIO.OUT)  # waterpump
 GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(20, GPIO.OUT)
 
@@ -109,8 +111,11 @@ def check_water_sensor():
         shared_state.water_detected_state = 0
         return False
 
-'''
-last_watering_file = 'last_watering.json'
+last_watering_file = '/home/adminbox/Env-controll/config/last_watering.json'
+
+if not os.path.exists(last_watering_file):
+    with open(last_watering_file, 'w') as file:
+        json.dump({'last_watering': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, file)
 
 def get_last_watering():
     try:
@@ -126,28 +131,36 @@ def update_last_watering():
         json.dump({'last_watering': now}, file)
 
 def run_water_pump(seconds):
-    GPIO.output(26, GPIO.HIGH)
-    dt.sleep(seconds)
     GPIO.output(26, GPIO.LOW)
+    dt.sleep(seconds)
+    GPIO.output(26, GPIO.HIGH)
 
 def run_watering_cycle():
     now = datetime.now()
     last_watering = get_last_watering()
+    
+    print(f"Last watering: {last_watering}")
+    print(f"Time since last watering: {(now - last_watering).days} days")
 
     if (now - last_watering).days >= 2:
+        print("Starting watering cycle...")
         run_water_pump(10)
-        dt.sleep(300)  # Pause for 5 minutes
+        dt.sleep(20)  # Pause for 5 minutes
         run_water_pump(10)
-        dt.sleep(300)  # Pause for 5 minutes
+        dt.sleep(20)  # Pause for 5 minutes
         run_water_pump(30)
         update_last_watering()
+        print("Watering cycle completed")
+    else:
+        print("No watering needed today")
+
 
 def watering_schedule():
-    schedule.every().day.at("20:15").do(run_watering_cycle)
+    schedule.every().day.at("15:25").do(run_watering_cycle)  # Adjust time as needed
     while True:
         schedule.run_pending()
         dt.sleep(1)
-'''
+
 
 def debounce_check(condition_func, duration=10, check_interval=1):
     start_time = datetime.now()
@@ -188,16 +201,16 @@ def condition_control():
 
             if time_since_last_on >= timedelta(minutes=3):
                 # Turn on the humidifier
-                humidifier_control(True)
-                humidifier_on = True
+                humidifier_control(False)
+                humidifier_on = False
                 last_humidifier_on_time = now  # Update the last on time
 
                 # Keep the humidifier on for 15 seconds
-                dt.sleep(15)
+                dt.sleep(30)
 
                 # Turn off the humidifier
-                humidifier_control(False)
-                humidifier_on = False
+                humidifier_control(True)
+                humidifier_on = True
             '''
             if box_vpd > shared_state.max_vpd and humidifier_on: #turn humidifier off
                 if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
