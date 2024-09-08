@@ -18,7 +18,7 @@ GPIO.setup(25, GPIO.OUT)  # Heatmat 230V
 GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V channel a outlet
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
-GPIO.setup(26, GPIO.OUT)  # waterpump
+#GPIO.setup(26, GPIO.OUT)  # waterpump
 GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 GPIO.setup(20, GPIO.OUT)
 
@@ -30,7 +30,7 @@ def cleanup_gpio():
     GPIO.output(25, GPIO.HIGH)  # low trigger
     GPIO.output(27, GPIO.LOW)   # high trigger
     GPIO.output(22, GPIO.LOW)   # high trigger
-    GPIO.output(26, GPIO.HIGH)  # low trigger
+    #GPIO.output(26, GPIO.HIGH)  # low trigger
     GPIO.output(20, GPIO.LOW)   # high trigger
     GPIO.output(21, GPIO.HIGH)   # low trigger
     GPIO.cleanup()
@@ -102,7 +102,7 @@ def light_control():
         dt.sleep(1)
 
 
-def check_water_sensor():
+def check_water_drain():
     GPIO.output(20, GPIO.HIGH)
     if GPIO.input(21) == GPIO.HIGH:
         shared_state.water_detected_state = 1
@@ -110,7 +110,7 @@ def check_water_sensor():
     else:
         shared_state.water_detected_state = 0
         return False
-
+'''
 last_watering_file = '/home/adminbox/Env-controll/config/last_watering.json'
 
 if not os.path.exists(last_watering_file):
@@ -160,7 +160,7 @@ def watering_schedule():
     while True:
         schedule.run_pending()
         dt.sleep(1)
-
+'''
 
 def debounce_check(condition_func, duration=10, check_interval=1):
     start_time = datetime.now()
@@ -180,7 +180,7 @@ def condition_control():
     last_humidifier_on_time = datetime.now() - timedelta(minutes=3)
     
     while True:
-        water_present = check_water_sensor()
+        water_present = check_water_drain()
         if water_present:
             fan_exhaust2_control(True) 
         else:

@@ -32,7 +32,8 @@ def write_to_influxdb() -> None:
 
     try:
         # Fetch data from sensors
-        room_sensor_data = room_sensor.get_data()
+        room_sensor_data = room_sensor.get_data()                                     .field("water_drain_state", shared_state.water_detected_state) \
+
     except Exception as e:
         print(f"Failed to get data from room sensor: {e}")
         room_sensor_data = None
@@ -72,7 +73,10 @@ def write_to_influxdb() -> None:
                                      .field("light_state", shared_state.light_state) \
                                      .field("humidifier_state", shared_state.humidifier_state) \
                                      .field("dehumidifier_state", shared_state.dehumidifier_state) \
-                                     .field("heatmat_state", shared_state.heatmat_state)
+                                     .field("heatmat_state", shared_state.heatmat_state) \
+                                     .field("water_drain_state", shared_state.water_detected_state) \
+                                     .field("water_drain_state", shared_state.waterpump_state) 
+
 
     if val_A is not None and val_B is not None:
         wage_point = Point("wage_data").tag("location", "wage") \

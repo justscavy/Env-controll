@@ -85,7 +85,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
             if last_email_sent_time is None or current_time - last_email_sent_time > email_cooldown:
                 # Humidity has been out of range for more than 1 minute
                 subject = "Vpd Alert"
-                body = f"The current vpd is {vpd:.2f} %.\nThe current temperature is {temperature:.2f} °C.\nThe current humidity is {humidity:.2f} kPa."
+                body = f"The current vpd is {vpd:.2f} kPa.\nThe current temperature is {temperature:.2f} °C.\nThe current humidity is {humidity:.2f} %."
                 send_email(subject, body, to_email)
                 # Reset the timer after sending the email and set the last email sent time
                 out_of_range_start_time_vpd = None

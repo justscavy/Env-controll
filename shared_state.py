@@ -10,7 +10,7 @@ class SharedState:
     heatmat_state: int = 0
     #fanexhaust2_state: int = 0 #TODO
     water_detected_state: int = 0
-
+    waterpump_state: int = 0
 shared_state = SharedState()
 
 """
