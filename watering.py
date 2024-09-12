@@ -1,3 +1,4 @@
+'''
 import RPi.GPIO as GPIO
 import time
 import json
@@ -6,10 +7,10 @@ from datetime import datetime, timedelta
 from shared_state import shared_state
 
 
-# GPIO setup
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(26, GPIO.OUT)
-GPIO.output(26, GPIO.HIGH)  # Ensure pump is off at startup
+GPIO.setup(26, GPIO.OUT, initial=GPIO.HIGH)
+GPIO.output(26, GPIO.HIGH)  
+
 
 last_watering_file = '/home/adminbox/Env-controll/config/last_watering.json'
 
@@ -75,3 +76,4 @@ def check_and_wait_for_next_watering():
         time.sleep(time_until_watering)
 
     run_watering_cycle()
+    '''

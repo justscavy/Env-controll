@@ -7,7 +7,6 @@ from sensor import Sensor, Location, address_box, address_room
 import atexit
 from shared_state import shared_state
 import json
-import logging
 import os
 
 # Initialize GPIOs
@@ -15,22 +14,22 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.OUT)  # Main Light 230V
 GPIO.setup(24, GPIO.OUT)  # Humidifier 230V
 GPIO.setup(25, GPIO.OUT)  # Heatmat 230V
-GPIO.setup(17, GPIO.OUT)  # Dehumidifier 230V channel a outlet
+GPIO.setup(26, GPIO.OUT)  # waterpump
 GPIO.setup(27, GPIO.OUT)  # Extra exhaust fan 12V
 GPIO.setup(22, GPIO.OUT)  # Fan on light 12V
-#GPIO.setup(26, GPIO.OUT)  # waterpump
-GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-GPIO.setup(20, GPIO.OUT)
+GPIO.setup(17, GPIO.OUT, initial=GPIO.HIGH) #Dehumidifier 230V channel a outlet
+GPIO.setup(21, GPIO.IN, pull_up_down=GPIO.PUD_DOWN) #water detection sensor
+GPIO.setup(20, GPIO.OUT) #water detection sensor
 
 # High since we work with a low trigger SSR
 def cleanup_gpio():
     GPIO.output(23, GPIO.HIGH)  # low trigger
     GPIO.output(24, GPIO.HIGH)  # low trigger
-    GPIO.output(17, GPIO.HIGH)  # low trigger
+    GPIO.output(26, GPIO.HIGH)  # low trigger
     GPIO.output(25, GPIO.HIGH)  # low trigger
     GPIO.output(27, GPIO.LOW)   # high trigger
     GPIO.output(22, GPIO.LOW)   # high trigger
-    #GPIO.output(26, GPIO.HIGH)  # low trigger
+    GPIO.output(17, GPIO.HIGH)  # low trigger
     GPIO.output(20, GPIO.LOW)   # high trigger
     GPIO.output(21, GPIO.HIGH)   # low trigger
     GPIO.cleanup()
@@ -65,7 +64,7 @@ def humidifier_control(trigger_humidifier):
 
 def dehumidifier_control(trigger_dehumidifier):
     with gpio_lock:
-        GPIO.output(17, GPIO.HIGH if trigger_dehumidifier else GPIO.LOW)
+        GPIO.output(26, GPIO.HIGH if trigger_dehumidifier else GPIO.LOW)
     if trigger_dehumidifier:
         shared_state.dehumidifier_state = 0
     else:
@@ -110,57 +109,71 @@ def check_water_drain():
     else:
         shared_state.water_detected_state = 0
         return False
-'''
+
 last_watering_file = '/home/adminbox/Env-controll/config/last_watering.json'
 
 if not os.path.exists(last_watering_file):
     with open(last_watering_file, 'w') as file:
-        json.dump({'last_watering': datetime.now().strftime('%Y-%m-%d %H:%M:%S')}, file)
+        json.dump({'last_watering': (datetime.now() - timedelta(days=2)).strftime('%Y-%m-%d 20:30:00')}, file)
 
 def get_last_watering():
     try:
         with open(last_watering_file, 'r') as file:
             data = json.load(file)
             return datetime.strptime(data['last_watering'], '%Y-%m-%d %H:%M:%S')
-    except (FileNotFoundError, KeyError):
+    except (FileNotFoundError, KeyError, ValueError):
         return datetime.now() - timedelta(days=2)
 
 def update_last_watering():
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now()
+    fixed_time = '20:30:00'
+    watering_datetime = f"{now.strftime('%Y-%m-%d')} {fixed_time}"
+    
     with open(last_watering_file, 'w') as file:
-        json.dump({'last_watering': now}, file)
+        json.dump({'last_watering': watering_datetime}, file)
 
 def run_water_pump(seconds):
-    GPIO.output(26, GPIO.LOW)
+    GPIO.output(17, GPIO.LOW)  # Turn pump on
+    shared_state.waterpump_state = 1
     dt.sleep(seconds)
-    GPIO.output(26, GPIO.HIGH)
+    GPIO.output(17, GPIO.HIGH)  # Turn pump off
+    shared_state.waterpump_state = 0
+
 
 def run_watering_cycle():
     now = datetime.now()
     last_watering = get_last_watering()
     
-    print(f"Last watering: {last_watering}")
-    print(f"Time since last watering: {(now - last_watering).days} days")
-
+    # Only water if 2 or more days have passed since the last watering
     if (now - last_watering).days >= 2:
-        print("Starting watering cycle...")
-        run_water_pump(10)
-        dt.sleep(20)  # Pause for 5 minutes
-        run_water_pump(10)
-        dt.sleep(20)  # Pause for 5 minutes
-        run_water_pump(30)
-        update_last_watering()
-        print("Watering cycle completed")
-    else:
-        print("No watering needed today")
+        if shared_state.water_detected_state == 0:
+            run_water_pump(15)
+            dt.sleep(300)
+            
+            # Check water detection before running the pump again
+            if shared_state.water_detected_state == 0:
+                run_water_pump(15)
+                dt.sleep(300)
+            
+            # Check water detection before running the pump again
+            if shared_state.water_detected_state == 0:
+                run_water_pump(15)
+                
+            update_last_watering()
+        else:
+            pass
 
 
-def watering_schedule():
-    schedule.every().day.at("15:25").do(run_watering_cycle)  # Adjust time as needed
-    while True:
-        schedule.run_pending()
-        dt.sleep(1)
-'''
+def check_and_wait_for_next_watering():
+    last_watering = get_last_watering()
+    next_watering_time = last_watering + timedelta(days=2)
+    now = datetime.now()
+
+    if now < next_watering_time:
+        time_until_watering = (next_watering_time - now).total_seconds()
+        dt.sleep(time_until_watering)
+
+    run_watering_cycle()
 
 def debounce_check(condition_func, duration=10, check_interval=1):
     start_time = datetime.now()
@@ -199,14 +212,14 @@ def condition_control():
         # Calculate the time difference since the last humidifier activation
             time_since_last_on = now - last_humidifier_on_time
 
-            if time_since_last_on >= timedelta(minutes=3):
+            if time_since_last_on >= timedelta(minutes=2):
                 # Turn on the humidifier
                 humidifier_control(False)
                 humidifier_on = False
                 last_humidifier_on_time = now  # Update the last on time
 
                 # Keep the humidifier on for 15 seconds
-                dt.sleep(30)
+                dt.sleep(40)
 
                 # Turn off the humidifier
                 humidifier_control(True)
