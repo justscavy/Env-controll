@@ -3,65 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Environment Control Interface</title>
+    <title>Plant Log</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
         }
-        label {
-            display: inline-block;
-            width: 150px;
+        label, input, textarea, select {
+            display: block;
             margin-bottom: 10px;
         }
-        input {
-            margin-bottom: 10px;
+        button {
+            margin-top: 10px;
+        }
+        table {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+        }
+    
+        /* Custom style for Pikaday */
+        .pika-single {
+            display: block !important; /* Force the calendar to be displayed as a block element */
+            position: static !important; /* Override position to keep it in the flow of the document */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            border: 1px solid #ccc;
+        }
+    
+        #calendar-container {
+            display: inline-block;
+            position: relative; /* Ensure correct placement of the calendar */
+        }
+    
+        /* Hide the input field if you don't want it visible */
+        #calendar {
+            display: none;
         }
     </style>
+    
+    <!-- Add Pikaday CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/css/pikaday.min.css">
 </head>
 <body>
-    <h1>Environment Control Interface</h1>
-    <div>
-        <label for="min-vpd">Min VPD:</label>
-        <input type="text" id="min-vpd" placeholder="Enter Min VPD value">
-        <br>
-        <label for="max-vpd">Max VPD:</label>
-        <input type="text" id="max-vpd" placeholder="Enter Max VPD value">
-        <br>
-        <button onclick="updateVpd()">Update VPD Values</button>
+    <h1>Plant Log</h1>
+
+    <form id="plant-form">
+        <label for="plant_dropdown">Choose an existing plant:</label>
+        <select id="plant_dropdown">
+            <option value="">--Select a plant--</option>
+        </select>
+
+        <label for="plant_name">Or enter a new plant name:</label>
+        <input type="text" id="plant_name" name="plant_name" placeholder="New plant name">
+
+        <label for="water_amount">Water Amount:</label>
+        <input type="text" id="water_amount" name="water_amount" required>
+
+        <label for="info">Additional Info:</label>
+        <textarea id="info" name="info" required></textarea>
+
+        <button type="submit">Log Entry</button>
+    </form>
+
+    <h2>Log Entries</h2>
+
+    <div id="calendar-container">
+        <input type="text" id="calendar" placeholder="Click to pick a date">
     </div>
 
-    <script>
-        function updateVpd() {
-            const min_vpd = document.getElementById('min-vpd').value;
-            const max_vpd = document.getElementById('max-vpd').value;
+    <div id="log-entries">
+        <!-- Log entries will appear here after date selection -->
+    </div>
 
-            fetch('/update_vpd', {
+    <table id="logs-table">
+        <thead>
+            <tr>
+                <th>Plant Name</th>
+                <th>Date</th>
+                <th>Water Amount</th>
+                <th>Info</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!-- Add Pikaday JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pikaday/1.8.0/pikaday.min.js"></script>
+    <script>
+        // Initialize Pikaday
+        const picker = new Pikaday({
+            field: document.getElementById('calendar'),
+            container: document.getElementById('calendar-container'),
+            onSelect: function(date) {
+                const dateStr = date.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
+                console.log("Selected date:", dateStr);
+                fetch(`/get_logs_by_date?date=${dateStr}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const logEntriesDiv = document.getElementById('log-entries');
+                        const tableBody = document.getElementById('logs-table').getElementsByTagName('tbody')[0];
+                        
+                        // Clear previous entries
+                        logEntriesDiv.innerHTML = '';
+                        tableBody.innerHTML = '';
+                        
+                        if (data.entries && data.entries.length > 0) {
+                            data.entries.forEach(entry => {
+                                logEntriesDiv.innerHTML += `<p>Plant: ${entry.plant_name}, Water: ${entry.water_amount}, Info: ${entry.info}</p>`;
+    
+                                const row = tableBody.insertRow();
+                                row.insertCell(0).innerText = entry.plant_name;
+                                row.insertCell(1).innerText = dateStr;
+                                row.insertCell(2).innerText = entry.water_amount;
+                                row.insertCell(3).innerText = entry.info;
+                            });
+                        } else {
+                            logEntriesDiv.innerHTML = '<p>No entries for this date.</p>';
+                        }
+                    });
+            }
+        });
+    
+        // Show the calendar immediately
+        picker.show();
+        
+        // Fetch existing plant names for the dropdown
+        function loadExistingPlants() {
+            fetch('/get_existing_plants')
+                .then(response => response.json())
+                .then(data => {
+                    const plantDropdown = document.getElementById('plant_dropdown');
+                    plantDropdown.innerHTML = '<option value="">--Select a plant--</option>';  // Reset options
+    
+                    data.forEach(plant => {
+                        const option = document.createElement('option');
+                        option.value = plant;
+                        option.text = plant;
+                        plantDropdown.appendChild(option);
+                    });
+                });
+        }
+    
+        // Submit new log entry
+        document.getElementById('plant-form').addEventListener('submit', function (event) {
+            event.preventDefault();
+    
+            const selectedPlant = document.getElementById('plant_dropdown').value;
+            const newPlantName = document.getElementById('plant_name').value;
+            const plantName = newPlantName ? newPlantName : selectedPlant;
+    
+            if (!plantName) {
+                alert('Please select or enter a plant name.');
+                return;
+            }
+    
+            const waterAmount = document.getElementById('water_amount').value;
+            const info = document.getElementById('info').value;
+    
+            fetch('/log_entry', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ min_vpd, max_vpd }),
+                body: JSON.stringify({
+                    plant_name: plantName,
+                    water_amount: waterAmount,
+                    info: info
+                }),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('VPD values updated successfully!');
+                    fetchLogsByDate();  // Refresh the logs table
+                    loadExistingPlants();  // Refresh the plant dropdown
                 }
             });
-        }
-
-        function getVpdValues() {
-            fetch('/get_states')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('min-vpd').value = data.states.min_vpd;
-                document.getElementById('max-vpd').value = data.states.max_vpd;
-            });
-        }
-
-        // Initialize VPD values on page load
-        getVpdValues();
+        });
+    
+        // Initialize plant names and log entries on page load
+        window.onload = function() {
+            loadExistingPlants();  // Load existing plant names
+        };
     </script>
 </body>
 </html>

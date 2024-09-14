@@ -88,14 +88,14 @@ def turn_off_light():
 def light_control():
     now = datetime.now().time()
     turn_on_time = datetime.strptime("20:00:00", "%H:%M:%S").time()
-    turn_off_time = datetime.strptime("08:00:00", "%H:%M:%S").time()
+    turn_off_time = datetime.strptime("14:00:00", "%H:%M:%S").time()
 
     if turn_off_time < now < turn_on_time:
         turn_off_light()
     else:
         turn_on_light()
     schedule.every().day.at("20:00:00").do(turn_on_light)
-    schedule.every().day.at("08:00:00").do(turn_off_light)
+    schedule.every().day.at("14:00:00").do(turn_off_light)
     while True:
         schedule.run_pending()
         dt.sleep(1)
@@ -147,9 +147,13 @@ def run_watering_cycle():
     # Only water if 2 or more days have passed since the last watering
     if (now - last_watering).days >= 2:
         if shared_state.water_detected_state == 0:
-            run_water_pump(15)
-            dt.sleep(300)
+            run_water_pump(10)
+            dt.sleep(120)
             
+            if shared_state.water_detected_state == 0:
+                run_water_pump(10)
+                dt.sleep(120)
+
             # Check water detection before running the pump again
             if shared_state.water_detected_state == 0:
                 run_water_pump(15)
@@ -175,7 +179,7 @@ def check_and_wait_for_next_watering():
 
     run_watering_cycle()
 
-def debounce_check(condition_func, duration=10, check_interval=1):
+def debounce_check(condition_func, duration=5, check_interval=1):
     start_time = datetime.now()
     while (datetime.now() - start_time).total_seconds() < duration:
         if not condition_func():
@@ -209,6 +213,7 @@ def condition_control():
             light_state = shared_state.light_state
 
         if light_state == 1:
+            '''
         # Calculate the time difference since the last humidifier activation
             time_since_last_on = now - last_humidifier_on_time
 
@@ -225,14 +230,14 @@ def condition_control():
                 humidifier_control(True)
                 humidifier_on = True
             '''
-            if box_vpd > shared_state.max_vpd and humidifier_on: #turn humidifier off
+            if box_vpd > shared_state.max_vpd: #turn humidifier off
                 if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
                     humidifier_control(False) #should be False
                     humidifier_on = False    #should be False
-            elif box_vpd < shared_state.min_vpd and not humidifier_on: #turn humidifier on
+            elif box_vpd < shared_state.min_vpd: #turn humidifier on
                 humidifier_control(True)
                 humidifier_on = True
-'''
+
     
             if box_vpd > shared_state.max_vpd: #turn dehumidifier on
                 dehumidifier_control(True)
@@ -242,6 +247,7 @@ def condition_control():
                 dehumidifier_on = False
                 
         else:
+            '''
             if is_even_minute:
                 humidifier_control(True)  # Turn on the humidifier during even minutes
                 humidifier_on = True
@@ -250,14 +256,14 @@ def condition_control():
                 humidifier_on = False
           
             '''
-            if box_vpd > shared_state.max_vpd and humidifier_on:
+            if box_vpd > shared_state.max_vpd:
                 if debounce_check(lambda: box_sensor.get_data().vpd > shared_state.max_vpd):
-                    humidifier_control(True) #should be False, True for now 
-                    humidifier_on = True #should be False
-            elif box_vpd < shared_state.min_vpd and not humidifier_on:
+                    humidifier_control(False) #should be False, True for now 
+                    humidifier_on = False #should be False
+            elif box_vpd < shared_state.min_vpd:
                 humidifier_control(True)
                 humidifier_on = True
-'''
+
             if box_vpd > shared_state.max_vpd:
                 dehumidifier_control(True)
                 dehumidifier_on = True

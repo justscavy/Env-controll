@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 @dataclass
 class SharedState:
-    min_vpd: float = 1.10 
-    max_vpd: float = 1.20  
+    min_vpd: float = 0.57#1.10 
+    max_vpd: float = 0.63#1.20  
     light_state: int = 0
     humidifier_state: int = 0
     dehumidifier_state: int = 0

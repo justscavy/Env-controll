@@ -58,7 +58,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
         # Reset timer if temperature goes back in range
         out_of_range_start_time_temp = None
 
-    if humidity < 50 or humidity > 70:
+    if humidity < 60 or humidity > 90:
         if out_of_range_start_time_humidity is None:
             # Start the timer when humidity goes out of range
             out_of_range_start_time_humidity = current_time
@@ -76,7 +76,7 @@ def check_conditions(temperature, humidity, vpd, to_email):
         # Reset the timer if humidity goes back in range
         out_of_range_start_time_humidity = None
     
-    if vpd < 1.00 or vpd > 1.30:
+    if vpd < 0.40 or vpd > 0.95:
         if out_of_range_start_time_vpd is None:
             # Start the timer when humidity goes out of range
             out_of_range_start_time_vpd = current_time

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Control Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: inline-block;
+            width: 150px;
+            margin-bottom: 10px;
+        }
+        input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Environment Control Interface</h1>
+    <div>
+        <label for="min-vpd">Min VPD:</label>
+        <input type="text" id="min-vpd" placeholder="Enter Min VPD value">
+        <br>
+        <label for="max-vpd">Max VPD:</label>
+        <input type="text" id="max-vpd" placeholder="Enter Max VPD value">
+        <br>
+        <button onclick="updateVpd()">Update VPD Values</button>
+    </div>
+
+    <script>
+        function updateVpd() {
+            const min_vpd = document.getElementById('min-vpd').value;
+            const max_vpd = document.getElementById('max-vpd').value;
+
+            fetch('/update_vpd', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ min_vpd, max_vpd }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('VPD values updated successfully!');
+                }
+            });
+        }
+
+        function getVpdValues() {
+            fetch('/get_states')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('min-vpd').value = data.states.min_vpd;
+                document.getElementById('max-vpd').value = data.states.max_vpd;
+            });
+        }
+
+        // Initialize VPD values on page load
+        getVpdValues();
+    </script>
+</body>
+</html>
