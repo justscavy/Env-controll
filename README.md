@@ -1,4 +1,4 @@
-##HVAC Controller
+## HVAC Controller
 
 Developed a fully automated HVAC controller that monitors and regulates light, temperature, humidity, vpd, watering system, air circulation / airflow, heating rod and weight of plants to optimize plant growth. This embedded system integrates sensors and actuators controlled via an raspberrypi microcontroller, demonstrating expertise in IoT and automation.
 
