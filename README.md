@@ -41,10 +41,9 @@ Load Cell Weight Sensor
 HX711 Dual Channel
 12V Waterpump
 
+Fuse/RCD 10A pref.
 distribution
-Sicherung/RCD 10A pref.
-Kleinverteiler
-Ap Steckdose 3Fach (contacts must be seperated.)
+Outlet 230V 3outlets (contacts must be seperated.)
 
 
 ## Installation
