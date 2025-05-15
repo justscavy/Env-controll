@@ -9,6 +9,8 @@ Developed a fully automated HVAC controller that monitors and regulates light, t
   Temperature / Humidity folr different Zones
   Weight of each Plant
   
+
+
   Status from all devices:
     Humidifier
     Dehumidifier
@@ -16,6 +18,8 @@ Developed a fully automated HVAC controller that monitors and regulates light, t
     3 x Fans
     heating element
     waterpump
+
+- Real-time video monitoring
   
 - notifications for thresholds and Warnings on your smartphone
   
@@ -25,6 +29,7 @@ Developed a fully automated HVAC controller that monitors and regulates light, t
 
 RaspberryPI 2GB RAM min.
 MicroSD 32GB
+Usb-Cam
 USB-C Kabel + Winkeladapter
 Main Exhaust fan
 environment-fan x2
@@ -64,4 +69,10 @@ Outlet 230V 3outlets (contacts must be seperated.)
 
 6. adjust and setup sensors and other hardware
 
-   
+
+![Steuerung](https://github.com/user-attachments/assets/f707ee4b-3d6a-4f0b-9bd1-5885d1386de4)
+![Steuerung1](https://github.com/user-attachments/assets/f031ba45-646e-4f15-8afb-dced8780d332)
+![alerts](https://github.com/user-attachments/assets/c67b6b12-3b59-453b-843a-645bd0e23976)
+![charts](https://github.com/user-attachments/assets/7de8a719-25c9-43c2-89e2-5b012ce2287c)
+
+
